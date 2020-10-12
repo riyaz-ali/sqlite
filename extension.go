@@ -4,7 +4,7 @@ package sqlite
 //
 // #include <stdlib.h>
 // #include "sqlite3ext.h"
-// #include "bridge.h"
+// #include "bridge/bridge.h"
 import "C"
 
 //export go_sqlite3_extension_init
@@ -29,4 +29,8 @@ func Register(fn func(*ExtensionApi) (ErrorCode, error)) {
 // sqlite's extension facility.
 type ExtensionApi struct {
 	db *C.struct_sqlite3
+}
+
+func (ext *ExtensionApi) Version() int {
+	return int(C._sqlite3_libversion_number())
 }

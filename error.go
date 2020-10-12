@@ -16,35 +16,15 @@ package sqlite
 
 // #include "sqlite3.h"
 import "C"
-
-// Error is an error produced by SQLite.
-type Error struct {
-	Code  ErrorCode // SQLite extended error code (SQLITE_OK is an invalid value)
-	Loc   string    // method name that generated the error
-	Query string    // original SQL query text
-	Msg   string    // value of sqlite3_errmsg, set sqlite.ErrMsg = true
-}
-
-func (err Error) Error() string {
-	str := "sqlite"
-	if err.Loc != "" {
-		str += "." + err.Loc
-	}
-	str += ": " + err.Code.String()
-	if err.Msg != "" {
-		str += ": " + err.Msg
-	}
-	if err.Query != "" {
-		str += " (" + err.Query + ")"
-	}
-	return str
-}
+import "fmt"
 
 // ErrorCode is an SQLite extended error code.
 //
 // The three SQLite result codes (SQLITE_OK, SQLITE_ROW, and SQLITE_DONE),
 // are not errors so they should not be used in an Error.
 type ErrorCode int
+
+func (code ErrorCode) Error() string { return fmt.Sprintf("sqlite: %s", code.String()) }
 
 func (code ErrorCode) String() string {
 	switch code {
@@ -340,33 +320,6 @@ const (
 	SQLITE_WARNING_AUTOINDEX       = ErrorCode(C.SQLITE_WARNING_AUTOINDEX)
 	SQLITE_AUTH_USER               = ErrorCode(C.SQLITE_AUTH_USER)
 )
-
-type causer interface {
-	Cause() error
-}
-
-// ErrCode extracts the SQLite error code from err.
-// If err is not a sqlite Error, SQLITE_ERROR is returned.
-// If err is nil, SQLITE_OK is returned.
-//
-// This function supports wrapped errors that implement
-//
-// 	interface { Cause() error }
-//
-// for errors from packages like https://github.com/pkg/errors
-func ErrCode(err error) ErrorCode {
-	if err != nil {
-		if ce, ok := err.(causer); ok {
-			return ErrCode(ce.Cause())
-		}
-
-		if err, isError := err.(Error); isError {
-			return err.Code
-		}
-		return SQLITE_ERROR
-	}
-	return SQLITE_OK
-}
 
 func itoa(buf []byte, val int64) []byte {
 	i := len(buf) - 1

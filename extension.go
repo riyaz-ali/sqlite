@@ -5,7 +5,15 @@ package sqlite
 // #include <stdlib.h>
 // #include "sqlite3ext.h"
 // #include "bridge/bridge.h"
+//
+// extern int  commit_hook_tramp(void*);
+// extern void rollback_hook_tramp(void*);
+//
 import "C"
+import (
+	"github.com/mattn/go-pointer"
+	"unsafe"
+)
 
 //export go_sqlite3_extension_init
 func go_sqlite3_extension_init(db *C.struct_sqlite3, msg **C.char, _ *C.sqlite3_api_routines) (code ErrorCode) {
@@ -68,4 +76,47 @@ func (ext *ExtensionApi) Limit(id LimitId) int {
 // SetLimit sets the limit for the given identifier
 func (ext *ExtensionApi) SetLimit(id LimitId, val int) int {
 	return int(C._sqlite3_limit(ext.db, C.int(id), C.int(val)))
+}
+
+// RegisterCommitHook sets the commit hook for a connection.
+//
+// If the callback returns non-zero the transaction will become a rollback.
+//
+// If there is an existing commit hook for this connection, it will be
+// removed. If callback is nil the existing hook (if any) will be removed
+// without creating a new one.
+func (ext *ExtensionApi) RegisterCommitHook(fn func() int) {
+	var prev unsafe.Pointer
+	if fn == nil {
+		prev = C._sqlite3_commit_hook(ext.db, nil, nil)
+	} else {
+		prev = C._sqlite3_commit_hook(ext.db, (*[0]byte)(C.commit_hook_tramp), pointer.Save(fn))
+	}
+	pointer.Unref(prev) // safe even if it's not ours .. it'll be a no-op
+}
+
+// RegisterRollbackHook sets the rollback hook for a connection.
+//
+// If there is an existing rollback hook for this connection, it will be
+// removed. If callback is nil the existing hook (if any) will be removed
+// without creating a new one.
+func (ext *ExtensionApi) RegisterRollbackHook(fn func() int) {
+	var prev unsafe.Pointer
+	if fn == nil {
+		prev = C._sqlite3_rollback_hook(ext.db, nil, nil)
+	} else {
+		prev = C._sqlite3_rollback_hook(ext.db, (*[0]byte)(C.rollback_hook_tramp), pointer.Save(fn))
+	}
+	pointer.Unref(prev) // safe even if it's not ours .. it'll be a no-op
+}
+
+//export commit_hook_tramp
+func commit_hook_tramp(p unsafe.Pointer) C.int {
+	var fn = pointer.Restore(p).(func() int)
+	return C.int(fn())
+}
+
+//export rollback_hook_tramp
+func rollback_hook_tramp(p unsafe.Pointer) {
+	pointer.Restore(p).(func())()
 }

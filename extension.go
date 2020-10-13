@@ -31,6 +31,12 @@ type ExtensionApi struct {
 	db *C.struct_sqlite3
 }
 
+// AutoCommit returns the status of the auto_commit setting
+func (ext *ExtensionApi) AutoCommit() bool {
+	return int(C._sqlite3_get_autocommit(ext.db)) != 0
+}
+
+// Version returns the sqlite3 library version number
 func (ext *ExtensionApi) Version() int {
 	return int(C._sqlite3_libversion_number())
 }

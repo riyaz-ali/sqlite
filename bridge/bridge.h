@@ -11,7 +11,7 @@
 // Most of the methods follow the convention of prefixing the sqlite api function with an underscore.
 // The bridge isn't extensive and doesn't cover the whole sqlite api.
 
-#include "../sqlite3ext.h"
+#include "../sqlite3.h"
 
 // aggregate routines
 void* _sqlite3_aggregate_context(sqlite3_context *, int);

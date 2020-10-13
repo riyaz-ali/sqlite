@@ -3,7 +3,7 @@ package sqlite
 // #cgo CFLAGS: -fPIC
 //
 // #include <stdlib.h>
-// #include "sqlite3ext.h"
+// #include "sqlite3.h"
 // #include "bridge/bridge.h"
 //
 // extern int  commit_hook_tramp(void*);
@@ -16,7 +16,7 @@ import (
 )
 
 //export go_sqlite3_extension_init
-func go_sqlite3_extension_init(db *C.struct_sqlite3, msg **C.char, _ *C.sqlite3_api_routines) (code ErrorCode) {
+func go_sqlite3_extension_init(db *C.struct_sqlite3, msg **C.char) (code ErrorCode) {
 	var err error
 	if code, err = extension(&ExtensionApi{db: db}); err != nil {
 		*msg = C.CString(err.Error())

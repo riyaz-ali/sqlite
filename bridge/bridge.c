@@ -1,4 +1,3 @@
-#include "../sqlite3ext.h"
 #include "bridge.h"
 
 SQLITE_EXTENSION_INIT3
@@ -61,9 +60,9 @@ void _sqlite3_result_zeroblob(sqlite3_context *ctx, int sz){ return sqlite3_resu
 int  _sqlite3_result_zeroblob64(sqlite3_context *ctx, sqlite3_uint64 sz){ return sqlite3_result_zeroblob64(ctx, sz); }
 
 // source of data in a query result
-const char* _sqlite3_column_database_name(sqlite3_stmt *stmt, int i){ return sqlite3_column_database_name(stmt, i); }
-const char* _sqlite3_column_table_name(sqlite3_stmt *stmt, int i){ return sqlite3_column_database_name(stmt, i); }
-const char* _sqlite3_column_origin_name(sqlite3_stmt *stmt, int i){ return sqlite3_column_database_name(stmt, i); }
+//const char* _sqlite3_column_database_name(sqlite3_stmt *stmt, int i);
+//const char* _sqlite3_column_table_name(sqlite3_stmt *stmt, int i);
+//const char* _sqlite3_column_origin_name(sqlite3_stmt *stmt, int i);
 
 // create_* routines
 void* _sqlite3_user_data(sqlite3_context *ctx){ return sqlite3_user_data(ctx); };

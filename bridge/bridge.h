@@ -119,7 +119,7 @@ int _sqlite3_enable_shared_cache(int);
 void _sqlite3_interrupt(sqlite3 *);
 int _sqlite3_release_memory(int);
 int _sqlite3_threadsafe(void);
-
+int _sqlite3_limit(sqlite3*, int, int);
 
 #if defined(BRIDGE_ENABLE_VTAB) // virtual table
 int _sqlite3_create_module_v2(sqlite3 *, const char *, const sqlite3_module *, void *, void (*)(void *));

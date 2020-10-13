@@ -109,3 +109,4 @@ int _sqlite3_enable_shared_cache(int enable){ return sqlite3_enable_shared_cache
 void _sqlite3_interrupt(sqlite3 *db){ sqlite3_interrupt(db); }
 int _sqlite3_release_memory(int i){ return sqlite3_release_memory(i); }
 int _sqlite3_threadsafe(void){ return sqlite3_threadsafe(); }
+int _sqlite3_limit(sqlite3* db, int id, int val){ return sqlite3_limit(db, id, val); }

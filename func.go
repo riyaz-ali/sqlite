@@ -9,6 +9,7 @@ package sqlite
 // extern void aggregate_function_final_tramp(sqlite3_context*);
 // extern void window_function_value_tramp(sqlite3_context*);
 // extern void window_function_inverse_tramp(sqlite3_context*, int, sqlite3_value**);
+// extern int collation_function_compare_tramp(void*, int, char*, int, char*);
 // extern void function_destroy(void*);
 //
 import "C"
@@ -188,6 +189,25 @@ func (ext *ExtensionApi) CreateFunction(name string, fn Function) error {
 	return ErrorCode(res)
 }
 
+// CreateCollation creates a new collation with the given name using the supplied comparison function.
+// The comparison function must obey the rules defined at https://www.sqlite.org/c3ref/create_collation.html
+func (ext *ExtensionApi) CreateCollation(name string, cmp func(string, string) int) error {
+	var cname = C.CString(name)
+	defer C.free(unsafe.Pointer(cname))
+
+	var pApp = pointer.Save(cmp)
+	var compare = (*[0]byte)(C.collation_function_compare_tramp)
+	var destroy = (*[0]byte)(C.function_destroy)
+
+	if res := C._sqlite3_create_collation_v2(ext.db, cname, C.SQLITE_UTF8, pApp, compare, destroy); ErrorCode(res) == SQLITE_OK {
+		return nil
+	} else {
+		// release pApp as destroy isn't called automatically by sqlite3_create_collation_v2
+		pointer.Unref(pApp)
+		return ErrorCode(res)
+	}
+}
+
 func toValues(count C.int, va **C.sqlite3_value) []Value {
 	var n = int(count)
 	var values []Value
@@ -237,6 +257,12 @@ func window_function_inverse_tramp(ctx *C.sqlite3_context, n C.int, v **C.sqlite
 	var id unsafe.Pointer = C._sqlite3_aggregate_context(ctx, C.int(1))
 	var c = &AggregateContext{Context: &Context{ptr: ctx}, id: id}
 	getFunction(ctx).(WindowFunction).Inverse(c, toValues(n, v)...)
+}
+
+//export collation_function_compare_tramp
+func collation_function_compare_tramp(pApp unsafe.Pointer, aLen C.int, a *C.char, bLen C.int, b *C.char) C.int {
+	var fn = pointer.Restore(pApp).(func(string, string) int)
+	return C.int(fn(C.GoStringN(a, aLen), C.GoStringN(b, bLen)))
 }
 
 //export function_destroy

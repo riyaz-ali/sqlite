@@ -41,6 +41,7 @@ int _sqlite3_value_bytes(sqlite3_value *val){ return sqlite3_value_bytes(val); }
 int _sqlite3_value_type(sqlite3_value *val){ return sqlite3_value_type(val); }
 int _sqlite3_value_numeric_type(sqlite3_value *val){ return sqlite3_value_numeric_type(val); }
 void* _sqlite3_value_pointer(sqlite3_value *val, const char *name){ return sqlite3_value_pointer(val, name); }
+int _sqlite3_value_nochange(sqlite3_value *val){ return sqlite3_value_nochange(val); }
 
 // returning results from custom functions
 void _sqlite3_result_blob(sqlite3_context *ctx, const void *val, int n, void (*destructor)(void *)){ sqlite3_result_blob(ctx, val, n, destructor); }

@@ -53,6 +53,7 @@ func (v Value) Int64() int64     { return int64(C._sqlite3_value_int64(v.ptr)) }
 func (v Value) Float() float64   { return float64(C._sqlite3_value_double(v.ptr)) }
 func (v Value) Len() int         { return int(C._sqlite3_value_bytes(v.ptr)) }
 func (v Value) Type() ColumnType { return ColumnType(C._sqlite3_value_type(v.ptr)) }
+func (v Value) Changed() bool    { return int(C._sqlite3_value_nochange(v.ptr)) != 0 }
 
 func (v Value) Text() string {
 	ptr := unsafe.Pointer(C._sqlite3_value_text(v.ptr))

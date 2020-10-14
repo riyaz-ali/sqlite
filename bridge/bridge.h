@@ -52,6 +52,7 @@ int _sqlite3_value_bytes(sqlite3_value *);
 int _sqlite3_value_type(sqlite3_value *);
 int _sqlite3_value_numeric_type(sqlite3_value *);
 void* _sqlite3_value_pointer(sqlite3_value *, const char *);
+int sqlite3_value_nochange(sqlite3_value*);
 
 // returning results from custom functions
 void _sqlite3_result_blob(sqlite3_context *, const void *, int, void (*)(void *));

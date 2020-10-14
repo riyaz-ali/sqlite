@@ -103,6 +103,10 @@ sqlite_int64 _sqlite3_last_insert_rowid(sqlite3 *db){ return sqlite3_last_insert
 const char* _sqlite3_libversion(void){ return sqlite3_libversion(); }
 int _sqlite3_libversion_number(void) { return sqlite3_libversion_number(); }
 
+// Virtual table routines
+int _sqlite3_create_module_v2(sqlite3 *db, const char *name, const sqlite3_module *module, void *pApp, void (*destructor)(void *)){ return sqlite3_create_module_v2(db, name, module, pApp, destructor); }
+int _sqlite3_declare_vtab(sqlite3 *db, const char *sql) { return sqlite3_declare_vtab(db, sql); }
+
 // miscellaneous routines
 int _sqlite3_get_autocommit(sqlite3 *db){ return sqlite3_get_autocommit(db); }
 int _sqlite3_enable_shared_cache(int enable){ return sqlite3_enable_shared_cache(enable); }

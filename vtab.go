@@ -433,10 +433,10 @@ func create_connect_shared(db *C.sqlite3, fn func(args []string, declare func(st
 
 	var table VirtualTable
 	if table, err = fn(args, declare); err != nil && err != SQLITE_OK {
-		*pzErr = nil // TODO: fill in the error message
 		if ec, ok := err.(ErrorCode); ok {
 			return C.int(ec)
 		}
+		*pzErr = _allocate_error(err)
 		return C.int(SQLITE_ERROR)
 	}
 
@@ -495,7 +495,7 @@ func x_best_index_tramp(tab *C.sqlite3_vtab, indexInfo *C.sqlite3_index_info) C.
 		if ec, ok := err.(ErrorCode); ok {
 			return C.int(ec)
 		}
-		return C.int(SQLITE_ERROR)
+		return set_error_message(tab, err)
 	} else if output == nil {
 		return C.int(SQLITE_ERROR)
 	}
@@ -542,7 +542,7 @@ func x_disconnect_tramp(tab *C.sqlite3_vtab) C.int {
 		if ec, ok := err.(ErrorCode); ok {
 			return C.int(ec)
 		}
-		return C.int(SQLITE_ERROR)
+		return set_error_message(tab, err)
 	}
 	return C.int(SQLITE_OK)
 }
@@ -557,7 +557,7 @@ func x_destroy_tramp(tab *C.sqlite3_vtab) C.int {
 		if ec, ok := err.(ErrorCode); ok {
 			return C.int(ec)
 		}
-		return C.int(SQLITE_ERROR)
+		return set_error_message(tab, err)
 	}
 	return C.int(SQLITE_OK)
 }
@@ -572,7 +572,7 @@ func x_open_tramp(tab *C.sqlite3_vtab, cur **C.sqlite3_vtab_cursor) C.int {
 		if ec, ok := err.(ErrorCode); ok {
 			return C.int(ec)
 		}
-		return C.int(SQLITE_ERROR)
+		return set_error_message(tab, err)
 	}
 
 	return C._allocate_virtual_cursor(cur, pointer.Save(cursor))
@@ -594,7 +594,7 @@ func x_close_tramp(cur *C.sqlite3_vtab_cursor) C.int {
 		if ec, ok := err.(ErrorCode); ok {
 			return C.int(ec)
 		}
-		return C.int(SQLITE_ERROR)
+		return set_error_message(cur.pVtab, err)
 	}
 
 	return C.int(SQLITE_OK)
@@ -608,7 +608,7 @@ func x_filter_tramp(cur *C.sqlite3_vtab_cursor, idxNum C.int, idxStr *C.char, ar
 		if ec, ok := err.(ErrorCode); ok {
 			return C.int(ec)
 		}
-		return C.int(SQLITE_ERROR)
+		return set_error_message(cur.pVtab, err)
 	}
 	return C.int(SQLITE_OK)
 }
@@ -620,7 +620,7 @@ func x_next_tramp(cur *C.sqlite3_vtab_cursor) C.int {
 		if ec, ok := err.(ErrorCode); ok {
 			return C.int(ec)
 		}
-		return C.int(SQLITE_ERROR)
+		return set_error_message(cur.pVtab, err)
 	}
 	return C.int(SQLITE_OK)
 }
@@ -656,7 +656,7 @@ func x_rowid_tramp(cur *C.sqlite3_vtab_cursor, rowid *C.sqlite3_int64) C.int {
 		if ec, ok := err.(ErrorCode); ok {
 			return C.int(ec)
 		}
-		return C.int(SQLITE_ERROR)
+		return set_error_message(cur.pVtab, err)
 	} else {
 		*rowid = C.sqlite3_int64(id)
 	}
@@ -670,7 +670,7 @@ func x_begin_tramp(tab *C.sqlite3_vtab) C.int {
 		if ec, ok := err.(ErrorCode); ok {
 			return C.int(ec)
 		}
-		return C.int(SQLITE_ERROR)
+		return set_error_message(tab, err)
 	}
 	return C.int(SQLITE_OK)
 }
@@ -682,7 +682,7 @@ func x_sync_tramp(tab *C.sqlite3_vtab) C.int {
 		if ec, ok := err.(ErrorCode); ok {
 			return C.int(ec)
 		}
-		return C.int(SQLITE_ERROR)
+		return set_error_message(tab, err)
 	}
 	return C.int(SQLITE_OK)
 }
@@ -694,7 +694,7 @@ func x_commit_tramp(tab *C.sqlite3_vtab) C.int {
 		if ec, ok := err.(ErrorCode); ok {
 			return C.int(ec)
 		}
-		return C.int(SQLITE_ERROR)
+		return set_error_message(tab, err)
 	}
 	return C.int(SQLITE_OK)
 }
@@ -706,10 +706,30 @@ func x_rollback_tramp(tab *C.sqlite3_vtab) C.int {
 		if ec, ok := err.(ErrorCode); ok {
 			return C.int(ec)
 		}
-		return C.int(SQLITE_ERROR)
+		return set_error_message(tab, err)
 	}
 	return C.int(SQLITE_OK)
 }
 
 //export module_destroy
 func module_destroy(pAux unsafe.Pointer) { pointer.Unref(pAux) }
+
+// helper to set the error message field for the cursor
+func set_error_message(vtab *C.sqlite3_vtab, err error) C.int {
+	if vtab.zErrMsg != nil {
+		C._sqlite3_free(unsafe.Pointer(vtab.zErrMsg))
+	}
+
+	vtab.zErrMsg = _allocate_error(err)
+	return C.int(SQLITE_ERROR)
+}
+
+// helper to allocate a string for error using sqlite3_malloc
+func _allocate_error(err error) *C.char {
+	var msg = err.Error()
+	var src = C.CString(msg)
+	var dst = C._sqlite3_malloc(C.int(len(msg)))
+	C.strncpy((*C.char)(dst), src, C.ulong(len(msg)))
+	C.free(unsafe.Pointer(src))
+	return (*C.char)(dst)
+}

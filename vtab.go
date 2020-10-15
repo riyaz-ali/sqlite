@@ -68,9 +68,11 @@ package sqlite
 import "C"
 
 import (
+	"bytes"
 	"errors"
 	"github.com/mattn/go-pointer"
 	"reflect"
+	"strings"
 	"unsafe"
 )
 
@@ -133,23 +135,22 @@ type WriteableVirtualTable interface {
 	VirtualTable
 
 	// Insert inserts a new row reading column values from the passed in list of values.
-	// In a rowid virtual table, if the first argument is an SQL NULL, then the implementation must choose
-	// a rowid for the newly inserted row. The first argument will be an SQL NULL for a WITHOUT ROWID virtual table,
-	// in which case the implementation should take the PRIMARY KEY value from the appropriate column.
+	// In a rowid virtual table, the implementation must choose a rowid for the newly inserted row.
+	// For a WITHOUT ROWID virtual table, implementation should take the PRIMARY KEY value from the appropriate column.
 	//
 	// When doing an Insert on a virtual table that uses ROWID, implementations must return the rowid of
 	// the newly inserted row; this will become the value returned by the sqlite3_last_insert_rowid() function.
 	// Returning a value for rowid in a WITHOUT ROWID table is a harmless no-op.
-	Insert(Value, ...Value) (int64, error)
+	Insert(...Value) (int64, error)
 
 	// Update updates an existing row identified by the rowid / primary-key given as the first argument.
 	Update(Value, ...Value) error
 
-	// UpdateWithChange updates an existing row identified by the rowid / primary-key given as old
+	// Replace replaces an existing row identified by the rowid / primary-key given as old
 	// and replacing it with the new id. The update might also include a list of other columns too.
 	// This will occur when an SQL statement updates a rowid, as in the statement:
 	//   UPDATE table SET rowid=rowid+1 WHERE ...;
-	UpdateWithKeyChange(old, new Value, _ ...Value) error
+	Replace(old, new Value, _ ...Value) error
 
 	// Delete deletes the row identified the rowid / primary-key in the given value.
 	Delete(Value) error
@@ -579,9 +580,48 @@ func x_open_tramp(tab *C.sqlite3_vtab, cur **C.sqlite3_vtab_cursor) C.int {
 }
 
 //export x_update_tramp
-func x_update_tramp(tab *C.sqlite3_vtab, argc C.int, argv **C.sqlite3_value, rowid *C.sqlite3_int64) C.int {
-	//var table = pointer.Restore(((*C.go_virtual_table)(unsafe.Pointer(tab))).impl).(VirtualTable)
-	return C.int(0)
+func x_update_tramp(tab *C.sqlite3_vtab, c C.int, v **C.sqlite3_value, rowid *C.sqlite3_int64) C.int {
+	var equivalent = func(typ ColumnType, v0, v1 Value) bool {
+		switch typ {
+		case SQLITE_INTEGER:
+			return v0.Int() == v1.Int() || v0.Int64() == v1.Int64()
+		case SQLITE_FLOAT:
+			return v0.Float() == v1.Float()
+		case SQLITE_TEXT:
+			return strings.Compare(v0.Text(), v1.Text()) == 0
+		case SQLITE_BLOB:
+			return bytes.Equal(v0.Blob(), v1.Blob())
+		}
+		return false
+	}
+
+	var table = pointer.Restore(((*C.go_virtual_table)(unsafe.Pointer(tab))).impl).(WriteableVirtualTable)
+	argc, argv := int(c), toValues(c, v)
+	var err error
+
+	if argc == 1 && argv[0].Type() != SQLITE_NULL {
+		err = table.Delete(argv[0])
+	} else {
+		if argv[0].Type() == SQLITE_NULL {
+			var id int64
+			if id, err = table.Insert(argv[2:]...); err == nil {
+				*rowid = C.sqlite3_int64(id) // is a harmless no-op if it's a WITHOUT ROWID table
+			}
+		} else if equivalent(argv[0].Type(), argv[0], argv[1]) {
+			err = table.Update(argv[0], argv[2:]...)
+		} else {
+			err = table.Replace(argv[0], argv[1], argv[2:]...)
+		}
+	}
+
+	if err != nil && err != SQLITE_OK {
+		if ec, ok := err.(ErrorCode); ok {
+			return C.int(ec)
+		}
+		return set_error_message(tab, err)
+	}
+
+	return C.int(SQLITE_OK)
 }
 
 //export x_close_tramp

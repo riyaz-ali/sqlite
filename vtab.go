@@ -1,6 +1,36 @@
 package sqlite
 
+// #include <stdlib.h>
+// #include "sqlite3.h"
+// #include "bridge/bridge.h"
+//
+// extern int x_create_tramp(sqlite3*, void*, int, char*, sqlite3_vtab**, char**);
+// extern int x_connect_tramp(sqlite3*, void*, int, char*, sqlite3_vtab**, char**);
+// extern int x_best_index_tramp(sqlite3_vtab*, sqlite3_index_info*);
+// extern int x_disconnect_tramp(sqlite3_vtab*);
+// extern int x_destroy_tramp(sqlite3_vtab*);
+// extern int x_open_tramp(sqlite3_vtab*, sqlite3_vtab_cursor**);
+// extern int x_close_tramp(sqlite3_vtab_cursor*);
+// extern int x_filter_tramp(sqlite3_vtab_cursor*, int, const char*, int, sqlite3_value**);
+// extern int x_next_tramp(sqlite3_vtab_cursor*);
+// extern int x_eof_tramp(sqlite3_vtab_cursor*);
+// extern int x_column_tramp(sqlite3_vtab_cursor*, sqlite3_context*, int);
+// extern int x_rowid_tramp(sqlite3_vtab_cursor*, sqlite3_int64*);
+// extern int x_update_tramp(sqlite3_vtab*, int, sqlite3_value**, sqlite3_int64*);
+// extern int x_begin_tramp(sqlite3_vtab*);
+// extern int x_sync_tramp(sqlite3_vtab*);
+// extern int x_commit_tramp(sqlite3_vtab*);
+// extern int x_rollback_tramp(sqlite3_vtab*);
+//
+// extern void module_destroy(void*);
+//
 import "C"
+
+import (
+	"errors"
+	"github.com/mattn/go-pointer"
+	"unsafe"
+)
 
 // Module corresponds to an sqlite3_module and defines a module object used to implement a virtual table.
 // The Module API is adapted to feel more Go-like and so, overall, is split into various sub-types
@@ -235,4 +265,110 @@ type IndexInfoOutput struct {
 
 	// used only in SQLite 3.9.0 and later
 	IdxFlags ScanFlag // mask of SQLITE_INDEX_SCAN_* flags
+}
+
+// ModuleOptions represents the various different module options that affect the module's registration process
+type ModuleOptions struct {
+	EponymousOnly  bool // CREATE VIRTUAL TABLE is prohibited for eponymous-only virtual tables
+	ReadOnly       bool // Insert / Update / Delete is not allowed on read-only tables
+	Transactional  bool // Transactional must be set if the table implements the optional Transactional interface
+	TwoPhaseCommit bool // TwoPhaseCommit must be set if the table supports two-phase commits (implies Transactional)
+	Overloadable   bool // Overloadable must be set if the table supports overloading default functions / operations
+}
+
+// CreateModule creates a named virtual table module with the given name and module as implementation.
+func (ext *ExtensionApi) CreateModule(name string, module Module, opts ...func(*ModuleOptions)) error {
+	var cname = C.CString(name)
+	defer C.free(unsafe.Pointer(cname))
+
+	var opt = &ModuleOptions{ReadOnly: true} // false is default for rest of the fields
+	for _, f := range opts {
+		f(opt)
+	}
+
+	if _, stateful := module.(StatefulModule); opt.EponymousOnly && stateful {
+		return errors.New("stateful module cannot be eponymous-only")
+	}
+
+	// the sqlite3_module interface
+	var xCreate, xConnect *[0]byte                             // sqlite3_module routines
+	var xBestIndex, xOpen, xDisconnect, xDestroy *[0]byte      // sqlite3_vtab mandatory routines
+	var xUpdate *[0]byte                                       // sqlite3_vtab writeable routine
+	var xBegin, xCommit, xRollback *[0]byte                    // sqlite3_vtab transactional routines
+	var xSync *[0]byte                                         // sqlite3_vtab two-phase commit routine
+	var xFindFunction *[0]byte                                 // sqlite3_vtab overload-able routine
+	var xFilter, xNext, xRowid, xColumn, xEof, xClose *[0]byte // sqlite3_vtab cursor routines
+
+	xConnect = (*[0]byte)(C.x_connect_tramp)
+	if !opt.EponymousOnly {
+		xCreate = xConnect // for eponymous tables, xCreate and xConnect must point to same routine, else it's set to nil
+	} else if _, stateful := module.(StatefulModule); stateful {
+		xCreate = (*[0]byte)(C.x_create_tramp)
+	}
+
+	xBestIndex = (*[0]byte)(C.x_best_index_tramp)
+	xOpen = (*[0]byte)(C.x_open_tramp)
+	xDisconnect = (*[0]byte)(C.x_disconnect_tramp)
+	xDestroy = (*[0]byte)(C.x_destroy_tramp)
+
+	if !opt.ReadOnly {
+		xUpdate = (*[0]byte)(C.x_update_tramp)
+	}
+
+	if opt.Transactional {
+		xBegin = (*[0]byte)(C.x_begin_tramp)
+		xCommit = (*[0]byte)(C.x_commit_tramp)
+		xRollback = (*[0]byte)(C.x_rollback_tramp)
+
+		if opt.TwoPhaseCommit {
+			xSync = (*[0]byte)(C.x_sync_tramp)
+		}
+	}
+
+	if opt.Overloadable {
+		// TODO: implement x_find_function_tramp
+	}
+
+	xFilter = (*[0]byte)(C.x_filter_tramp)
+	xNext = (*[0]byte)(C.x_next_tramp)
+	xRowid = (*[0]byte)(C.x_rowid_tramp)
+	xColumn = (*[0]byte)(C.x_column_tramp)
+	xEof = (*[0]byte)(C.x_eof_tramp)
+	xClose = (*[0]byte)(C.x_close_tramp)
+
+	var sqliteModule = &C.sqlite3_module{
+		iVersion:      0,
+		xCreate:       xCreate,
+		xConnect:      xConnect,
+		xBestIndex:    xBestIndex,
+		xDisconnect:   xDisconnect,
+		xDestroy:      xDestroy,
+		xOpen:         xOpen,
+		xClose:        xClose,
+		xFilter:       xFilter,
+		xNext:         xNext,
+		xEof:          xEof,
+		xColumn:       xColumn,
+		xRowid:        xRowid,
+		xUpdate:       xUpdate,
+		xBegin:        xBegin,
+		xSync:         xSync,
+		xCommit:       xCommit,
+		xRollback:     xRollback,
+		xFindFunction: xFindFunction,
+
+		// not implemented
+		xRename:     nil,
+		xSavepoint:  nil,
+		xRelease:    nil,
+		xRollbackTo: nil,
+		xShadowName: nil,
+	}
+
+	var res = C._sqlite3_create_module_v2(ext.db, cname, sqliteModule, pointer.Save(module), (*[0]byte)(C.module_destroy))
+
+	if ErrorCode(res) == SQLITE_OK {
+		return nil
+	}
+	return ErrorCode(res)
 }

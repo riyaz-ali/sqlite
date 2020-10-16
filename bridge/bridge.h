@@ -52,6 +52,7 @@ int _sqlite3_value_bytes(sqlite3_value *);
 int _sqlite3_value_type(sqlite3_value *);
 int _sqlite3_value_numeric_type(sqlite3_value *);
 void* _sqlite3_value_pointer(sqlite3_value *, const char *);
+int _sqlite3_value_nochange(sqlite3_value*);
 
 // returning results from custom functions
 void _sqlite3_result_blob(sqlite3_context *, const void *, int, void (*)(void *));
@@ -113,6 +114,10 @@ sqlite_int64 _sqlite3_last_insert_rowid(sqlite3 *);
 const char* _sqlite3_libversion(void);
 int _sqlite3_libversion_number(void);
 
+// Virtual table routines
+int _sqlite3_create_module_v2(sqlite3 *, const char *, const sqlite3_module *, void *, void (*)(void *));
+int _sqlite3_declare_vtab(sqlite3 *, const char *);
+
 // miscellaneous routines
 int _sqlite3_get_autocommit(sqlite3 *);
 int _sqlite3_enable_shared_cache(int);
@@ -120,16 +125,6 @@ void _sqlite3_interrupt(sqlite3 *);
 int _sqlite3_release_memory(int);
 int _sqlite3_threadsafe(void);
 int _sqlite3_limit(sqlite3*, int, int);
-
-#if defined(BRIDGE_ENABLE_VTAB) // virtual table
-int _sqlite3_create_module_v2(sqlite3 *, const char *, const sqlite3_module *, void *, void (*)(void *));
-int _sqlite3_declare_vtab(sqlite3 *, const char *);
-int _sqlite3_vtab_nochange(sqlite3_context *);
-const char* _sqlite3_vtab_collation(sqlite3_index_info *, int);
-int _sqlite3_overload_function(sqlite3 *, const char *, int);
-int _sqlite3_vtab_config(sqlite3 *, int, ...);
-int _sqlite3_vtab_on_conflict(sqlite3 *);
-#endif
 
 #if defined(BRIDGE_ENABLE_BLOB_IO) // Blob I/O
 int _sqlite3_blob_open(sqlite3 *, const char *, const char *, const char *, sqlite3_int64, int, sqlite3_blob **);

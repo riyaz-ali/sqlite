@@ -408,6 +408,16 @@ func (ext *ExtensionApi) CreateModule(name string, module Module, opts ...func(*
 	return ErrorCode(res)
 }
 
+// options for CreateModule ...
+
+// @formatter:off
+func EponymousOnly(b bool) func(*ModuleOptions)  { return func(m *ModuleOptions) { m.EponymousOnly = b } }
+func ReadOnly(b bool) func(*ModuleOptions)       { return func(m *ModuleOptions) { m.ReadOnly = b } }
+func Transaction(b bool) func(*ModuleOptions)    { return func(m *ModuleOptions) { m.Transactional = b } }
+func TwoPhaseCommit(b bool) func(*ModuleOptions) { return func(m *ModuleOptions) { m.TwoPhaseCommit = b } }
+func Overloadable(b bool) func(*ModuleOptions)   { return func(m *ModuleOptions) { m.Overloadable = b } }
+// @formatter:on
+
 // TRAMPOLINES AHEAD!!
 
 // shared code used by xCreate & xConnect tramps
@@ -482,7 +492,7 @@ func x_best_index_tramp(tab *C.sqlite3_vtab, indexInfo *C.sqlite3_index_info) C.
 			Cap:  int(indexInfo.nOrderBy),
 		}))
 		for _, ob := range slice {
-			orderBys = append(orderBys, &OrderBy{ColumnIndex: int(ob.iColumn), Desc: int(ob.desc) == 0})
+			orderBys = append(orderBys, &OrderBy{ColumnIndex: int(ob.iColumn), Desc: int(ob.desc) == 1})
 		}
 	}
 

@@ -18,3 +18,6 @@ sum.so:
 
 upper.so:
 	go build -buildmode=c-shared -o $@ ./upper
+
+csv.so:
+	go build -buildmode=c-shared -o $@ ./csv

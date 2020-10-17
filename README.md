@@ -52,3 +52,10 @@ SQLITE3
 
 Each of the support feature provides an exported interface that the user code must implement. Refer to code and [godoc](https://pkg.go.dev/go.riyazali.net/sqlite)
 for more details.
+
+## License
+
+MIT License Copyright (c) 2020 Riyaz Ali
+
+Refer to [LICENSE](./LICENSE) for full text.
+

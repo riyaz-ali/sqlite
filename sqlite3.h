@@ -5,8 +5,8 @@
 #define _SQLITE3_H
 
 #ifdef USE_LIBSQLITE3
-#include <sqlite3.h>
-#include <sqlite3ext.h>
+#include "sqlite3.h"
+#include "sqlite3ext.h"
 #else
 #include "h/sqlite3.h"
 #include "h/sqlite3ext.h"

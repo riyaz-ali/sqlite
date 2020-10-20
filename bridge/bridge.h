@@ -55,7 +55,7 @@ void* _sqlite3_value_pointer(sqlite3_value *, const char *);
 int _sqlite3_value_nochange(sqlite3_value*);
 
 // returning results from custom functions
-void _sqlite3_result_blob(sqlite3_context *, const void *, int, void (*)(void *));
+void _sqlite3_result_blob0(sqlite3_context *, const void *, int, void (*)(void *));
 void _sqlite3_result_blob64(sqlite3_context *, const void *, sqlite3_uint64, void (*)(void *));
 void _sqlite3_result_double(sqlite3_context *, double);
 void _sqlite3_result_error(sqlite3_context *, const char *, int);
@@ -65,7 +65,7 @@ void _sqlite3_result_error_toobig(sqlite3_context *);
 void _sqlite3_result_int(sqlite3_context *, int);
 void _sqlite3_result_int64(sqlite3_context *, sqlite_int64);
 void _sqlite3_result_null(sqlite3_context *);
-void _sqlite3_result_text(sqlite3_context *, const char *, int, void (*)(void *));
+void _sqlite3_result_text0(sqlite3_context *, const char *, int, void (*)(void *));
 void _sqlite3_result_value(sqlite3_context *, sqlite3_value *);
 void _sqlite3_result_pointer(sqlite3_context *, void *, const char *, void (*)(void *));
 void _sqlite3_result_zeroblob(sqlite3_context *, int);

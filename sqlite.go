@@ -26,7 +26,7 @@ func (ctx Context) ResultText(v string) {
 	if len(v) != 0 {
 		cv = C.CString(v)
 	}
-	C._sqlite3_result_text(ctx.ptr, cv, C.int(len(v)), (*[0]byte)(C.free))
+	C._sqlite3_result_text0(ctx.ptr, cv, C.int(len(v)), (*[0]byte)(C.free))
 }
 
 func (ctx Context) ResultError(err error) {

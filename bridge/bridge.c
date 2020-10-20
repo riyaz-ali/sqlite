@@ -44,7 +44,7 @@ void* _sqlite3_value_pointer(sqlite3_value *val, const char *name){ return sqlit
 int _sqlite3_value_nochange(sqlite3_value *val){ return sqlite3_value_nochange(val); }
 
 // returning results from custom functions
-void _sqlite3_result_blob(sqlite3_context *ctx, const void *val, int n, void (*destructor)(void *)){ sqlite3_result_blob(ctx, val, n, destructor); }
+void _sqlite3_result_blob0(sqlite3_context *ctx, const void *val, int n, void (*destructor)(void *)){ sqlite3_result_blob(ctx, val, n, destructor); }
 void _sqlite3_result_blob64(sqlite3_context *ctx, const void *val, sqlite3_uint64 n, void (*destructor)(void *)){ sqlite3_result_blob64(ctx, val, n, destructor); }
 void _sqlite3_result_double(sqlite3_context *ctx, double val){ sqlite3_result_double(ctx, val); }
 void _sqlite3_result_error(sqlite3_context *ctx, const char *msg, int n){ sqlite3_result_error(ctx, msg, n); }
@@ -54,7 +54,7 @@ void _sqlite3_result_error_toobig(sqlite3_context *ctx){ sqlite3_result_error_to
 void _sqlite3_result_int(sqlite3_context *ctx, int val){ sqlite3_result_int(ctx, val); }
 void _sqlite3_result_int64(sqlite3_context *ctx, sqlite_int64 val){ sqlite3_result_int(ctx, val); }
 void _sqlite3_result_null(sqlite3_context *ctx){ sqlite3_result_null(ctx); }
-void _sqlite3_result_text(sqlite3_context *ctx, const char *val, int n, void (*destructor)(void *)){ sqlite3_result_text(ctx, val, n, destructor); }
+void _sqlite3_result_text0(sqlite3_context *ctx, const char *val, int n, void (*destructor)(void *)){ sqlite3_result_text(ctx, val, n, destructor); }
 void _sqlite3_result_value(sqlite3_context *ctx, sqlite3_value *val){ sqlite3_result_value(ctx, val); }
 void _sqlite3_result_pointer(sqlite3_context *ctx, void *val, const char *name, void (*destructor)(void *)){ sqlite3_result_pointer(ctx, val, name, destructor); }
 void _sqlite3_result_zeroblob(sqlite3_context *ctx, int sz){ return sqlite3_result_zeroblob(ctx, sz); }

@@ -520,9 +520,11 @@ func x_best_index_tramp(tab *C.sqlite3_vtab, indexInfo *C.sqlite3_index_info) C.
 	}))
 
 	for i, c := range output.ConstraintUsage {
-		usage[i].argvIndex = C.int(c.ArgvIndex)
-		if c.Omit {
-			usage[i].omit = C.uchar(1)
+		if c != nil { // usage must be ordered .. and a list value might be nil so we better check this
+			usage[i].argvIndex = C.int(c.ArgvIndex)
+			if c.Omit {
+				usage[i].omit = C.uchar(1)
+			}
 		}
 	}
 

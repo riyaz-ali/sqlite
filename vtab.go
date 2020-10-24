@@ -447,7 +447,7 @@ func create_connect_shared(db *C.sqlite3, fn func(args []string, declare func(st
 		if ec, ok := err.(ErrorCode); ok {
 			return C.int(ec)
 		}
-		*pzErr = _allocate_error(err)
+		*pzErr = _allocate_string(err.Error())
 		return C.int(SQLITE_ERROR)
 	}
 
@@ -529,7 +529,7 @@ func x_best_index_tramp(tab *C.sqlite3_vtab, indexInfo *C.sqlite3_index_info) C.
 	}
 
 	indexInfo.idxNum = C.int(output.IndexNumber)
-	indexInfo.idxStr = C.CString(output.IndexString)
+	indexInfo.idxStr = _allocate_string(output.IndexString)
 	indexInfo.needToFreeIdxStr = C.int(1)
 	if output.OrderByConsumed {
 		indexInfo.orderByConsumed = C.int(1)
@@ -772,16 +772,15 @@ func set_error_message(vtab *C.sqlite3_vtab, err error) C.int {
 		C._sqlite3_free(unsafe.Pointer(vtab.zErrMsg))
 	}
 
-	vtab.zErrMsg = _allocate_error(err)
+	vtab.zErrMsg = _allocate_string(err.Error())
 	return C.int(SQLITE_ERROR)
 }
 
 // helper to allocate a string for error using sqlite3_malloc
-func _allocate_error(err error) *C.char {
-	var msg = err.Error()
+func _allocate_string(msg string) *C.char {
 	var src = C.CString(msg)
 	var dst = C._sqlite3_malloc(C.int(len(msg)))
-	C.strncpy((*C.char)(dst), src, C.ulong(len(msg)))
+	C.strncpy((*C.char)(dst), src, C.size_t(len(msg)))
 	C.free(unsafe.Pointer(src))
 	return (*C.char)(dst)
 }

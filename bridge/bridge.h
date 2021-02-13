@@ -13,17 +13,45 @@
 
 #include "../sqlite3.h"
 
-// aggregate routines
+//- routine that work with sqlite3_context; see: https://sqlite.org/c3ref/context.html
+//-----------------------------
+
 void* _sqlite3_aggregate_context(sqlite3_context *, int);
+sqlite3* _sqlite3_context_db_handle(sqlite3_context*);
+void* _sqlite3_user_data(sqlite3_context *);
+void* _sqlite3_get_auxdata(sqlite3_context *, int);
+void  _sqlite3_set_auxdata(sqlite3_context *, int, void *, void (*)(void *));
 
-// query interface
-int _sqlite3_exec(sqlite3 *, const char *, sqlite3_callback, void *, char **);
+void _sqlite3_result_blob0(sqlite3_context *, const void *, int, void (*)(void *));
+void _sqlite3_result_blob64(sqlite3_context *, const void *, sqlite3_uint64, void (*)(void *));
+void _sqlite3_result_double(sqlite3_context *, double);
+void _sqlite3_result_error(sqlite3_context *, const char *, int);
+void _sqlite3_result_error_code(sqlite3_context *, int);
+void _sqlite3_result_error_nomem(sqlite3_context *);
+void _sqlite3_result_error_toobig(sqlite3_context *);
+void _sqlite3_result_int(sqlite3_context *, int);
+void _sqlite3_result_int64(sqlite3_context *, sqlite_int64);
+void _sqlite3_result_null(sqlite3_context *);
+void _sqlite3_result_text0(sqlite3_context *, const char *, int, void (*)(void *));
+void _sqlite3_result_value(sqlite3_context *, sqlite3_value *);
+void _sqlite3_result_pointer(sqlite3_context *, void *, const char *, void (*)(void *));
+void _sqlite3_result_zeroblob(sqlite3_context *, int);
+int _sqlite3_result_zeroblob64(sqlite3_context *, sqlite3_uint64);
 
-// prepared statement
+// routines that work with sqlite_stmt; see: https://sqlite.org/c3ref/stmt.html
+//-----------------------------
+
+// constructor + destructor
 int _sqlite3_prepare_v2(sqlite3 *, const char *, int, sqlite3_stmt **, const char **);
+int _sqlite3_finalize(sqlite3_stmt*);
+
+// stepping / executing a prepared statement
 int _sqlite3_step(sqlite3_stmt *);
 int _sqlite3_reset(sqlite3_stmt *);
 int _sqlite3_clear_bindings(sqlite3_stmt *);
+int _sqlite3_data_count(sqlite3_stmt *);
+int _sqlite3_column_count(sqlite3_stmt *);
+sqlite3* _sqlite3_db_handle(sqlite3_stmt*);
 
 // binding values to prepared statement
 int _sqlite3_bind_blob(sqlite3_stmt *, int, const void *, int, void (*)(void *));
@@ -41,8 +69,27 @@ int _sqlite3_bind_parameter_count(sqlite3_stmt *);
 int _sqlite3_bind_parameter_index(sqlite3_stmt *, const char *);
 const char* _sqlite3_bind_parameter_name(sqlite3_stmt *, int);
 
-// getting result values from a query
-int _sqlite3_data_count(sqlite3_stmt *);
+// reading result values from an sqlite3_stmt
+const void* _sqlite3_column_blob(sqlite3_stmt*, int);
+double _sqlite3_column_double(sqlite3_stmt*, int);
+int _sqlite3_column_int(sqlite3_stmt*, int);
+sqlite3_int64 _sqlite3_column_int64(sqlite3_stmt*, int);
+const unsigned char* _sqlite3_column_text(sqlite3_stmt*, int);
+const void* _sqlite3_column_text16(sqlite3_stmt*, int);
+sqlite3_value* _sqlite3_column_value(sqlite3_stmt*, int);
+int _sqlite3_column_bytes(sqlite3_stmt*, int);
+int _sqlite3_column_bytes16(sqlite3_stmt*, int);
+
+// query sqlite3_stmt column information
+const char* _sqlite3_column_name(sqlite3_stmt*, int);
+int _sqlite3_column_type(sqlite3_stmt*, int);
+const char *_sqlite3_column_database_name(sqlite3_stmt *, int);
+const char *_sqlite3_column_table_name(sqlite3_stmt *, int);
+const char *_sqlite3_column_origin_name(sqlite3_stmt *, int);
+
+// routines to extract value from sqlite3_value type; see: https://sqlite.org/c3ref/value.html
+//-----------------------------
+
 const void *_sqlite3_value_blob(sqlite3_value *);
 double _sqlite3_value_double(sqlite3_value *);
 int _sqlite3_value_int(sqlite3_value *);
@@ -54,37 +101,12 @@ int _sqlite3_value_numeric_type(sqlite3_value *);
 void* _sqlite3_value_pointer(sqlite3_value *, const char *);
 int _sqlite3_value_nochange(sqlite3_value*);
 
-// returning results from custom functions
-void _sqlite3_result_blob0(sqlite3_context *, const void *, int, void (*)(void *));
-void _sqlite3_result_blob64(sqlite3_context *, const void *, sqlite3_uint64, void (*)(void *));
-void _sqlite3_result_double(sqlite3_context *, double);
-void _sqlite3_result_error(sqlite3_context *, const char *, int);
-void _sqlite3_result_error_code(sqlite3_context *, int);
-void _sqlite3_result_error_nomem(sqlite3_context *);
-void _sqlite3_result_error_toobig(sqlite3_context *);
-void _sqlite3_result_int(sqlite3_context *, int);
-void _sqlite3_result_int64(sqlite3_context *, sqlite_int64);
-void _sqlite3_result_null(sqlite3_context *);
-void _sqlite3_result_text0(sqlite3_context *, const char *, int, void (*)(void *));
-void _sqlite3_result_value(sqlite3_context *, sqlite3_value *);
-void _sqlite3_result_pointer(sqlite3_context *, void *, const char *, void (*)(void *));
-void _sqlite3_result_zeroblob(sqlite3_context *, int);
-int _sqlite3_result_zeroblob64(sqlite3_context *, sqlite3_uint64);
+// routines to register application-defined sql functions
+//-----------------------------
 
-// source of data in a query result
-const char *_sqlite3_column_database_name(sqlite3_stmt *, int);
-const char *_sqlite3_column_table_name(sqlite3_stmt *, int);
-const char *_sqlite3_column_origin_name(sqlite3_stmt *, int);
-
-// create_* routines
 int _sqlite3_create_collation_v2(sqlite3 *, const char *, int, void *, int (*)(void *, int, const void *, int, const void *), void (*)(void *));
 int _sqlite3_create_function_v2(sqlite3 *, const char *, int, int, void *, void (*)(sqlite3_context *, int, sqlite3_value **), void (*)(sqlite3_context *, int, sqlite3_value **), void (*)(sqlite3_context *), void (*)(void *));
 int _sqlite3_create_window_function(sqlite3 *, const char *, int, int, void *, void (*)(sqlite3_context *, int, sqlite3_value **), void (*)(sqlite3_context *), void (*)(sqlite3_context *), void (*)(sqlite3_context *, int, sqlite3_value **), void (*)(void *));
-void *_sqlite3_user_data(sqlite3_context *);
-
-// associate arbitrary metadata with a context
-void* _sqlite3_get_auxdata(sqlite3_context *, int);
-void  _sqlite3_set_auxdata(sqlite3_context *, int, void *, void (*)(void *));
 
 // memory related operations
 void  _sqlite3_free(void *);
@@ -104,11 +126,6 @@ void* _sqlite3_commit_hook(sqlite3 *, int (*)(void *), void *);
 void* _sqlite3_rollback_hook(sqlite3 *, void (*)(void *), void *);
 void* _sqlite3_update_hook(sqlite3 *, void (*)(void *, int, const char *, const char *, sqlite_int64), void *);
 
-// status routines
-int _sqlite3_status(int, int *, int *, int);
-int _sqlite3_db_status(sqlite3 *, int, int *, int *, int);
-int _sqlite3_stmt_status(sqlite3_stmt *, int, int);
-
 // version number information
 sqlite_int64 _sqlite3_last_insert_rowid(sqlite3 *);
 const char* _sqlite3_libversion(void);
@@ -125,32 +142,5 @@ void _sqlite3_interrupt(sqlite3 *);
 int _sqlite3_release_memory(int);
 int _sqlite3_threadsafe(void);
 int _sqlite3_limit(sqlite3*, int, int);
-
-#if defined(BRIDGE_ENABLE_BLOB_IO) // Blob I/O
-int _sqlite3_blob_open(sqlite3 *, const char *, const char *, const char *, sqlite3_int64, int, sqlite3_blob **);
-int _sqlite3_blob_close(sqlite3_blob *);
-int _sqlite3_blob_reopen(sqlite3_blob *, sqlite3_int64);
-int _sqlite3_blob_bytes(sqlite3_blob *);
-int _sqlite3_blob_read(sqlite3_blob *, void *, int, int);
-int _sqlite3_blob_write(sqlite3_blob *, const void *, int, int);
-#endif
-
-#if defined(BRIDGE_ENABLE_VFS) // VFS
-sqlite3_vfs *_sqlite3_vfs_find(const char *);
-int _sqlite3_vfs_register(sqlite3_vfs *, int);
-int _sqlite3_vfs_unregister(sqlite3_vfs *);
-// database file information
-const char *_sqlite3_filename_database(const char *);
-const char *_sqlite3_filename_journal(const char *);
-const char *_sqlite3_filename_wal(const char *);
-#endif
-
-#if defined(BRIDGE_ENABLE_BACKUP) // Backup
-sqlite3_backup *_sqlite3_backup_init(sqlite3 *, const char *, sqlite3 *, const char *);
-int _sqlite3_backup_finish(sqlite3_backup *);
-int _sqlite3_backup_pagecount(sqlite3_backup *);
-int _sqlite3_backup_remaining(sqlite3_backup *);
-int _sqlite3_backup_step(sqlite3_backup *, int);
-#endif
 
 #endif // _BRIDGE_H

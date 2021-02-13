@@ -19,6 +19,23 @@ const (
 	SQLITE_NULL    = ColumnType(C.SQLITE_NULL)
 )
 
+func (t ColumnType) String() string {
+	switch t {
+	case SQLITE_INTEGER:
+		return "SQLITE_INTEGER"
+	case SQLITE_FLOAT:
+		return "SQLITE_FLOAT"
+	case SQLITE_TEXT:
+		return "SQLITE_TEXT"
+	case SQLITE_BLOB:
+		return "SQLITE_BLOB"
+	case SQLITE_NULL:
+		return "SQLITE_NULL"
+	default:
+		return "<unknown sqlite datatype>"
+	}
+}
+
 // Value is an *C.sqlite3_value.
 // Value represent all values that can be stored in a database table.
 // It is used to extract column values from sql queries.

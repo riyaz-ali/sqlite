@@ -39,6 +39,9 @@ type ExtensionApi struct {
 	db *C.struct_sqlite3
 }
 
+// Connection returns an instance of Conn which can be used to perform query on the database and more.
+func (ext *ExtensionApi) Connection() *Conn { return wrap(ext.db) }
+
 // AutoCommit returns the status of the auto_commit setting
 func (ext *ExtensionApi) AutoCommit() bool {
 	return int(C._sqlite3_get_autocommit(ext.db)) != 0

@@ -87,7 +87,7 @@ type Module interface {
 	// If a module only declares a Connect method than it's an eponymous module (by default) and can either be
 	// invoked directly or be used in a CREATE VIRTUAL TABLE statement. To make eponymous-only use EponymousOnly(true).
 	// see: https://www.sqlite.org/vtab.html for details about normal, eponymous and eponymous-only modules.
-	Connect(args []string, declare func(string) error) (VirtualTable, error)
+	Connect(_ *Conn, args []string, declare func(string) error) (VirtualTable, error)
 }
 
 // StatefulModule is one which requires prior state initialization before one can connect to it.
@@ -97,7 +97,7 @@ type StatefulModule interface {
 	// Create creates a new instance of a virtual table in response to a CREATE VIRTUAL TABLE statement.
 	// It receives a slice of arguments passed to the module and a method to declare the virtual table's schema.
 	// Create must call declare or else the operation would fail and error would be returned to sqlite.
-	Create(args []string, declare func(string) error) (VirtualTable, error)
+	Create(_ *Conn, args []string, declare func(string) error) (VirtualTable, error)
 }
 
 // VirtualTable corresponds to an sqlite3_vtab and defines a virtual table object used to implement a virtual table.
@@ -421,7 +421,7 @@ func Overloadable(b bool) func(*ModuleOptions)   { return func(m *ModuleOptions)
 // TRAMPOLINES AHEAD!!
 
 // shared code used by xCreate & xConnect tramps
-func create_connect_shared(db *C.sqlite3, fn func(args []string, declare func(string) error) (VirtualTable, error), argc C.int, argv **C.char, vtab **C.sqlite3_vtab, pzErr **C.char) C.int {
+func create_connect_shared(db *C.sqlite3, fn func(_ *Conn, args []string, declare func(string) error) (VirtualTable, error), argc C.int, argv **C.char, vtab **C.sqlite3_vtab, pzErr **C.char) C.int {
 	var err error
 
 	// helper function passed to Create/Connect to invoke sqlite3_declare_vtab
@@ -443,7 +443,7 @@ func create_connect_shared(db *C.sqlite3, fn func(args []string, declare func(st
 	}
 
 	var table VirtualTable
-	if table, err = fn(args, declare); err != nil && err != SQLITE_OK {
+	if table, err = fn(wrap(db), args, declare); err != nil && err != SQLITE_OK {
 		if ec, ok := err.(ErrorCode); ok {
 			return C.int(ec)
 		}

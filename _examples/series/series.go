@@ -16,7 +16,7 @@ const (
 // The source of this file is adapted from the c implementation at https://sqlite.org/src/file/ext/misc/series.c
 type SeriesModule struct{}
 
-func (s *SeriesModule) Connect(_ []string, declare func(string) error) (sqlite.VirtualTable, error) {
+func (s *SeriesModule) Connect(_ *sqlite.Conn, _ []string, declare func(string) error) (sqlite.VirtualTable, error) {
 	return &SeriesTable{}, declare("CREATE TABLE series(value,start hidden,stop hidden,step hidden)")
 }
 

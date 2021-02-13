@@ -19,7 +19,7 @@ type CsvModule struct{}
 //    filename=FILENAME          Name of file containing CSV content
 //    header=YES|NO              First row of CSV defines the names of
 //                               columns if "yes".  Default "no".
-func (c *CsvModule) Connect(args []string, declare func(string) error) (_ sqlite.VirtualTable, err error) {
+func (c *CsvModule) Connect(_ *sqlite.Conn, args []string, declare func(string) error) (_ sqlite.VirtualTable, err error) {
 	args = args[2:]
 	var table = &CsvVirtualTable{}
 	var readHeader = false
@@ -65,8 +65,8 @@ func (c *CsvModule) Connect(args []string, declare func(string) error) (_ sqlite
 }
 
 // same as Connect
-func (c *CsvModule) Create(args []string, declare func(string) error) (sqlite.VirtualTable, error) {
-	return c.Connect(args, declare)
+func (c *CsvModule) Create(conn *sqlite.Conn, args []string, declare func(string) error) (sqlite.VirtualTable, error) {
+	return c.Connect(conn, args, declare)
 }
 
 // CsvVirtualTable is an instance of the csv virtual table. It is bound to a single csv file / data.

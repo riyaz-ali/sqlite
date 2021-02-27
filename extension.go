@@ -19,7 +19,7 @@ import (
 func go_sqlite3_extension_init(db *C.struct_sqlite3, msg **C.char) (code ErrorCode) {
 	var err error
 	if code, err = extension(&ExtensionApi{db: db}); err != nil {
-		*msg = C.CString(err.Error())
+		*msg = _allocate_string(err.Error())
 	}
 	return
 }

@@ -778,9 +778,13 @@ func set_error_message(vtab *C.sqlite3_vtab, err error) C.int {
 
 // helper to allocate a string for error using sqlite3_malloc
 func _allocate_string(msg string) *C.char {
-	var src = C.CString(msg)
-	var dst = C._sqlite3_malloc(C.int(len(msg)))
-	C.strncpy((*C.char)(dst), src, C.size_t(len(msg)))
-	C.free(unsafe.Pointer(src))
+	var l = len(msg)+1
+	var dst = C._sqlite3_malloc(C.int(l))
+
+	// buf is go representation of dst, so that we can do copy(buf, ...)
+	var buf = *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(unsafe.Pointer(dst)), Len: l, Cap: l}))
+	copy(buf, msg)
+	buf[l-1] = 0 // null-terminate the resulting string
+
 	return (*C.char)(dst)
 }

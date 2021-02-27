@@ -8,7 +8,10 @@ package sqlite
 // #include "bridge/bridge.h"
 import "C"
 
-import "unsafe"
+import (
+	"runtime"
+	"unsafe"
+)
 
 // Conn is an open connection to an sqlite3 database.
 // Currently, it only provides a subset of methods available
@@ -23,7 +26,14 @@ type Conn struct {
 
 // wrap wraps the provided handle to sqlite3 database, yielding Conn
 func wrap(db *C.sqlite3) *Conn {
-	return &Conn{db: db, unlockNote: C.unlock_note_alloc()}
+	var c = &Conn{db: db, unlockNote: C.unlock_note_alloc()}
+
+	// ensure unlock_note is free'd when connection is no longer in use
+	runtime.SetFinalizer(c, func(c *Conn) {
+		C.free(unsafe.Pointer(c.unlockNote))
+	})
+
+	return c
 }
 
 // LastInsertRowID reports the rowid of the most recently successful INSERT.

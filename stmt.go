@@ -49,6 +49,10 @@ type Stmt struct {
 func (stmt *Stmt) Finalize() error {
 	var res = C._sqlite3_finalize(stmt.stmt)
 	stmt.conn = nil
+	switch res {
+	case C.SQLITE_OK, C.SQLITE_DONE, C.SQLITE_ROW:
+		return nil
+	}
 	return ErrorCode(res)
 }
 

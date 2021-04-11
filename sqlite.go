@@ -9,6 +9,8 @@ package sqlite
 import "C"
 
 import (
+	"fmt"
+	"reflect"
 	"runtime"
 	"unsafe"
 )
@@ -78,4 +80,64 @@ func (conn *Conn) Prepare(query string) (*Stmt, int, error) {
 	}
 
 	return stmt, int(C.strlen(trailing)), nil
+}
+
+// Exec executes an SQLite query without caching the underlying query.
+// It is the spiritual equivalent of sqlite3_exec.
+func(conn *Conn) Exec(query string, fn func(stmt *Stmt) error, args ...interface{}) (err error) {
+	var stmt *Stmt
+	var trailingBytes int
+	if stmt, trailingBytes, err = conn.Prepare(query); err != nil {
+		return err
+	}
+	defer func() {
+		if ferr := stmt.Finalize(); err == nil {
+			err = ferr
+		}
+	}()
+
+	if trailingBytes != 0 {
+		return fmt.Errorf("exec: query %q has trailing bytes", query)
+	}
+
+	for i, arg := range args {
+		i++ // parameters are 1-indexed
+		v := reflect.ValueOf(arg)
+		switch v.Kind() {
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			stmt.BindInt64(i, v.Int())
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+			stmt.BindInt64(i, int64(v.Uint()))
+		case reflect.Float32, reflect.Float64:
+			stmt.BindFloat(i, v.Float())
+		case reflect.String:
+			stmt.BindText(i, v.String())
+		case reflect.Bool:
+			stmt.BindBool(i, v.Bool())
+		case reflect.Invalid:
+			stmt.BindNull(i)
+		default:
+			if v.Kind() == reflect.Slice && v.Type().Elem().Kind() == reflect.Uint8 {
+				stmt.BindBytes(i, v.Bytes())
+			} else {
+				stmt.BindText(i, fmt.Sprintf("%v", arg))
+			}
+		}
+	}
+	for {
+		hasRow, err := stmt.Step()
+		if err != nil {
+			return err
+		}
+		if !hasRow {
+			break
+		}
+		if fn != nil {
+			if err := fn(stmt); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }

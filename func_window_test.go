@@ -83,36 +83,76 @@ func TestWindowFunction(t *testing.T) {
 	}
 	defer db.Close()
 
-	var stmt *sql.Stmt
-	stmt, err = db.Prepare(`
+	t.Run("normal aggregation", func(t *testing.T) {
+		var stmt *sql.Stmt
+		stmt, err = db.Prepare(`
 	WITH RECURSIVE generate_series(value) AS (
 	    SELECT 1
 	    	UNION ALL
 	    SELECT value+1 FROM generate_series
 	    	WHERE value+1<=10
-	) SELECT sum(value) FROM generate_series`);
+	) SELECT SUM(value) FROM generate_series`)
 
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer stmt.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer stmt.Close()
 
-	var rows *sql.Rows
-	if rows, err = stmt.Query(); err != nil {
-		t.Fatal(err)
-	}
-	defer rows.Close()
+		var rows *sql.Rows
+		if rows, err = stmt.Query(); err != nil {
+			t.Fatal(err)
+		}
+		defer rows.Close()
 
-	if !rows.Next() {
-		t.Fatal("expected query to return single row")
-	}
+		if !rows.Next() {
+			t.Fatal("expected query to return single row")
+		}
 
-	var result int
-	if err = rows.Scan(&result); err != nil {
-		t.Fatal(err)
-	}
+		var result int
+		if err = rows.Scan(&result); err != nil {
+			t.Fatal(err)
+		}
 
-	if result != 55 {
-		t.Fatalf("invalid result: got %q", result)
-	}
+		if result != 55 {
+			t.Fatalf("invalid result: got %q", result)
+		}
+	})
+
+	t.Run("running sum", func(t *testing.T) {
+		var stmt *sql.Stmt
+		stmt, err = db.Prepare(`
+	WITH RECURSIVE generate_series(value) AS (
+	    SELECT 1
+	    	UNION ALL
+	    SELECT value+1 FROM generate_series
+	    	WHERE value+1<=10
+	) SELECT SUM(value) OVER(ROWS UNBOUNDED  PRECEDING) AS running_total FROM generate_series`)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer stmt.Close()
+
+		var rows *sql.Rows
+		if rows, err = stmt.Query(); err != nil {
+			t.Fatal(err)
+		}
+		defer rows.Close()
+
+		var series = []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+		var total = 0
+
+		for i := 0; rows.Next(); i++ {
+			total += series[i]
+
+			var j int
+			if err = rows.Scan(&j); err != nil {
+				t.Fatal(err)
+			}
+
+			if total != j {
+				t.Fatalf("value mismatch: total(%d) != j(%d)", total, j)
+			}
+		}
+	})
 }

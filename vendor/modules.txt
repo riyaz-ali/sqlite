@@ -1,3 +1,6 @@
 # github.com/mattn/go-pointer v0.0.1
 ## explicit
 github.com/mattn/go-pointer
+# github.com/mattn/go-sqlite3 v1.14.6
+## explicit
+github.com/mattn/go-sqlite3

@@ -112,10 +112,7 @@ func (ext *ExtensionApi) CreateFunction(name string, fn Function) error {
 		return errors.New("sqlite: unknown function type")
 	}
 
-	if ErrorCode(res) == SQLITE_OK {
-		return nil
-	}
-	return ErrorCode(res)
+	return errorIfNotOk(res)
 }
 
 // CreateCollation creates a new collation with the given name using the supplied comparison function.
@@ -128,13 +125,14 @@ func (ext *ExtensionApi) CreateCollation(name string, cmp func(string, string) i
 	var compare = (*[0]byte)(C.collation_function_compare_tramp)
 	var destroy = (*[0]byte)(C.function_destroy)
 
-	if res := C._sqlite3_create_collation_v2(ext.db, cname, C.SQLITE_UTF8, pApp, compare, destroy); ErrorCode(res) == SQLITE_OK {
-		return nil
-	} else {
+	var res = C._sqlite3_create_collation_v2(ext.db, cname, C.SQLITE_UTF8, pApp, compare, destroy);
+	if err := ErrorCode(res); !err.ok() {
 		// release pApp as destroy isn't called automatically by sqlite3_create_collation_v2
 		pointer.Unref(pApp)
-		return ErrorCode(res)
+		return err
 	}
+
+	return nil
 }
 
 func toValues(count C.int, va **C.sqlite3_value) []Value {

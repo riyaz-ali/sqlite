@@ -1,4 +1,5 @@
 // +build static
+// +build sqlite3ext
 
 package sqlite
 

@@ -61,7 +61,7 @@ func (conn *Conn) Prepare(query string) (*Stmt, int, error) {
 	var trailing *C.char
 
 	var res = C._sqlite3_prepare_v2(conn.db, sql, -1, &stmt.stmt, &trailing)
-	if err := ErrorCode(res); err != SQLITE_OK {
+	if err := ErrorCode(res); !err.ok() {
 		return nil, 0, err
 	}
 

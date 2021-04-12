@@ -49,11 +49,7 @@ type Stmt struct {
 func (stmt *Stmt) Finalize() error {
 	var res = C._sqlite3_finalize(stmt.stmt)
 	stmt.conn = nil
-	switch res {
-	case C.SQLITE_OK, C.SQLITE_DONE, C.SQLITE_ROW:
-		return nil
-	}
-	return ErrorCode(res)
+	return errorIfNotOk(res)
 }
 
 // Reset resets a prepared statement so it can be executed again.
@@ -72,18 +68,20 @@ func (stmt *Stmt) Reset() error {
 		}
 		// An SQLITE_LOCKED_SHAREDCACHE error has been seen from sqlite3_reset
 		// in the wild, but so far has eluded exact test case replication.
-		if res = C.wait_for_unlock_notify(stmt.conn.db, stmt.conn.unlockNote); res != C.SQLITE_OK {
-			return ErrorCode(res)
+		var err = ErrorCode(C.wait_for_unlock_notify(stmt.conn.db, stmt.conn.unlockNote))
+		if !err.ok() {
+			return err
 		}
 	}
-	return ErrorCode(res)
+
+	return errorIfNotOk(res)
 }
 
 // ClearBindings clears all bound parameter values on a statement.
 //
 // see: https://www.sqlite.org/c3ref/clear_bindings.html
 func (stmt *Stmt) ClearBindings() error {
-	return ErrorCode(C._sqlite3_clear_bindings(stmt.stmt))
+	return errorIfNotOk(C._sqlite3_clear_bindings(stmt.stmt))
 }
 
 // Step moves through the statement cursor using sqlite3_step.
@@ -155,8 +153,8 @@ func (stmt *Stmt) step() (bool, error) {
 }
 
 func (stmt *Stmt) handleBindErr(res C.int) {
-	if stmt.bindErr == nil {
-		stmt.bindErr = ErrorCode(res)
+	if err := ErrorCode(res); !err.ok() && stmt.bindErr == nil {
+		stmt.bindErr = err
 	}
 }
 

@@ -401,11 +401,7 @@ func (ext *ExtensionApi) CreateModule(name string, module Module, opts ...func(*
 	sqliteModule.xFindFunction = xFindFunction
 
 	var res = C._sqlite3_create_module_v2(ext.db, cname, sqliteModule, pointer.Save(module), (*[0]byte)(C.module_destroy))
-
-	if ErrorCode(res) == SQLITE_OK {
-		return nil
-	}
-	return ErrorCode(res)
+	return errorIfNotOk(res)
 }
 
 // options for CreateModule ...
@@ -428,10 +424,7 @@ func create_connect_shared(db *C.sqlite3, fn func(_ *Conn, args []string, declar
 	var declare = func(sql string) error {
 		var csql = C.CString(sql)
 		defer C.free(unsafe.Pointer(csql))
-		if res := C._sqlite3_declare_vtab(db, csql); res != C.SQLITE_OK {
-			return ErrorCode(res)
-		}
-		return nil
+		return errorIfNotOk(C._sqlite3_declare_vtab(db, csql))
 	}
 
 	var args = make([]string, argc)

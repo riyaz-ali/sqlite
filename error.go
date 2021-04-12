@@ -18,11 +18,26 @@ package sqlite
 import "C"
 import "fmt"
 
+func errorIfNotOk(res C.int) error {
+	if err := ErrorCode(res); !err.ok() {
+		return err
+	}
+	return nil
+}
+
 // ErrorCode is an SQLite extended error code.
 //
 // The three SQLite result codes (SQLITE_OK, SQLITE_ROW, and SQLITE_DONE),
 // are not errors so they should not be used in an Error.
 type ErrorCode int
+
+func (code ErrorCode) ok() bool  {
+	switch code {
+	case SQLITE_OK, SQLITE_ROW, SQLITE_DONE:
+		return true
+	}
+	return false
+}
 
 func (code ErrorCode) Error() string { return fmt.Sprintf("sqlite: %s", code.String()) }
 

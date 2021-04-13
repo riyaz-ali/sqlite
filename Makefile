@@ -13,7 +13,7 @@ ifeq ($(shell uname -s),Darwin)
 endif
 
 # go build tags used by test, vet and more
-TAGS = "libsqlite3"
+TAGS = ""
 
 # ========================================
 # target for common golang tasks

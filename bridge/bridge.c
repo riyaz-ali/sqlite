@@ -74,6 +74,9 @@ const char* _sqlite3_column_database_name(sqlite3_stmt *stmt, int i){ return sql
 const char* _sqlite3_column_table_name(sqlite3_stmt *stmt, int i){ return sqlite3_column_table_name(stmt, i); }
 const char* _sqlite3_column_origin_name(sqlite3_stmt *stmt, int i){ return sqlite3_column_origin_name(stmt, i); }
 
+// meta-information about the statement itself
+int _sqlite3_stmt_readonly(sqlite3_stmt* pStmt) { return sqlite3_stmt_readonly(pStmt); }
+
 // routines to extract value from sqlite3_value type; see: https://sqlite.org/c3ref/value.html
 //-----------------------------
 

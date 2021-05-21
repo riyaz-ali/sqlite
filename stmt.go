@@ -190,6 +190,13 @@ func (stmt *Stmt) ColumnName(col int) string {
 	return C.GoString((*C.char)(unsafe.Pointer(C._sqlite3_column_name(stmt.stmt, C.int(col)))))
 }
 
+// BindName returns the name assigned to a particular parameter in the query.
+//
+// see: https://www.sqlite.org/c3ref/bind_parameter_name.html
+func (stmt *Stmt) BindName(param int) string {
+	return C.GoString((*C.char)(unsafe.Pointer(C._sqlite3_bind_parameter_name(stmt.stmt, C.int(param)))))
+}
+
 // BindParamCount reports the number of parameters in stmt.
 //
 // see: https://www.sqlite.org/c3ref/bind_parameter_count.html
@@ -283,6 +290,15 @@ func (stmt *Stmt) BindZeroBlob(param int, len int64) {
 	stmt.handleBindErr(res)
 }
 
+// BindValue binds an sqlite_value object at given index
+func (stmt *Stmt) BindValue(param int, value Value) {
+	if stmt.stmt == nil {
+		return
+	}
+	res := C._sqlite3_bind_value(stmt.stmt, C.int(param), value.ptr)
+	stmt.handleBindErr(res)
+}
+
 // SetInt64 binds an int64 to a parameter using a column name.
 func (stmt *Stmt) SetInt64(param string, value int64) {
 	stmt.BindInt64(stmt.findBindName(param), value)
@@ -321,6 +337,12 @@ func (stmt *Stmt) SetNull(param string) {
 // An invalid parameter name will cause the call to Step to return an error.
 func (stmt *Stmt) SetZeroBlob(param string, len int64) {
 	stmt.BindZeroBlob(stmt.findBindName(param), len)
+}
+
+// SetValue binds an sqlite3_value to a parameter using a column name.
+// An invalid parameter name will cause the call to Step to return an error.
+func (stmt *Stmt) SetValue(param string, value Value) {
+	stmt.BindValue(stmt.findBindName(param), value)
 }
 
 // ColumnInt returns a query result value as an int.
@@ -382,6 +404,11 @@ func (stmt *Stmt) ColumnText(col int) string {
 // ColumnFloat returns a query result as a float64.
 func (stmt *Stmt) ColumnFloat(col int) float64 {
 	return float64(C._sqlite3_column_double(stmt.stmt, C.int(col)))
+}
+
+// ColumnValue returns a query result as an sqlite_value.
+func (stmt *Stmt) ColumnValue(col int) Value {
+	return Value{ptr: C._sqlite3_column_value(stmt.stmt, C.int(col))}
 }
 
 // ColumnLen returns the number of bytes in a query result.
@@ -457,6 +484,15 @@ func (stmt *Stmt) GetFloat(colName string) float64 {
 	return stmt.ColumnFloat(col)
 }
 
+// GetValue returns a query result value for colName as an sqlite_value.
+func (stmt *Stmt) GetValue(colName string) Value {
+	col, found := stmt.colNames[colName]
+	if !found {
+		return Value{}
+	}
+	return stmt.ColumnValue(col)
+}
+
 // GetLen returns the number of bytes in a query result for colName.
 func (stmt *Stmt) GetLen(colName string) int {
 	col, found := stmt.colNames[colName]
@@ -464,4 +500,10 @@ func (stmt *Stmt) GetLen(colName string) int {
 		return 0
 	}
 	return stmt.ColumnLen(col)
+}
+
+// Readonly returns true if this statement is readonly and makes no direct changes to the content of the database file.
+// See: https://www.sqlite.org/c3ref/stmt_readonly.html
+func (stmt *Stmt) Readonly() bool {
+	return C.int(C._sqlite3_stmt_readonly(stmt.stmt)) != 0
 }

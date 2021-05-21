@@ -87,6 +87,9 @@ const char *_sqlite3_column_database_name(sqlite3_stmt *, int);
 const char *_sqlite3_column_table_name(sqlite3_stmt *, int);
 const char *_sqlite3_column_origin_name(sqlite3_stmt *, int);
 
+// meta-information about the statement itself
+int _sqlite3_stmt_readonly(sqlite3_stmt*);
+
 // routines to extract value from sqlite3_value type; see: https://sqlite.org/c3ref/value.html
 //-----------------------------
 

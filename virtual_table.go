@@ -344,9 +344,15 @@ func (ext *ExtensionApi) CreateModule(name string, module Module, opts ...func(*
 
 	xConnect = (*[0]byte)(C.x_connect_tramp)
 	if !opt.EponymousOnly {
-		xCreate = xConnect // for eponymous tables, xCreate and xConnect must point to same routine, else it's set to nil
-	} else if _, stateful := module.(StatefulModule); stateful {
-		xCreate = (*[0]byte)(C.x_create_tramp)
+		// stateful tables have xCreate set to a different function
+		if _, stateful := module.(StatefulModule); stateful {
+			xCreate = (*[0]byte)(C.x_create_tramp)
+		} else {
+			// non-stateful non-eponymous-only function are eponymous functions
+			// that can be used in both CREATE VIRTUAL TABLE and as Table-valued functions
+			// for that, xCreate and xConnect must point to same routine
+			xCreate = xConnect
+		}
 	}
 
 	xBestIndex = (*[0]byte)(C.x_best_index_tramp)

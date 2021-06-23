@@ -3,9 +3,17 @@ package sqlite
 // #include <stdlib.h>
 // #include "sqlite3.h"
 // #include "bridge/bridge.h"
+//
+// extern void pointer_destructor_hook_tramp(void*);
 import "C"
 
-import "unsafe"
+import (
+	"github.com/mattn/go-pointer"
+	"unsafe"
+)
+
+// see: https://sqlite.org/bindptr.html#pointer_types_are_static_strings
+var pointerType = C.CString("golang")
 
 // Context is an *C.struct_sqlite3_context.
 // It is used by custom functions to return result values.
@@ -39,3 +47,11 @@ func (ctx Context) ResultError(err error) {
 	defer C.free(unsafe.Pointer(cerrstr))
 	C._sqlite3_result_error(ctx.ptr, cerrstr, C.int(len(errstr)))
 }
+
+func (ctx Context) ResultPointer(val interface{}) {
+	ptr := pointer.Save(val)
+	C._sqlite3_result_pointer(ctx.ptr, ptr, pointerType, (*[0]byte)(C.pointer_destructor_hook_tramp))
+}
+
+//export pointer_destructor_hook_tramp
+func pointer_destructor_hook_tramp(p unsafe.Pointer) { pointer.Unref(p) }

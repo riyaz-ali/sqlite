@@ -5,7 +5,10 @@ package sqlite
 // #include "bridge/bridge.h"
 import "C"
 
-import "unsafe"
+import (
+	"github.com/mattn/go-pointer"
+	"unsafe"
+)
 
 // ColumnType are codes for each of the SQLite fundamental data types:
 // https://www.sqlite.org/c3ref/c_blob.html
@@ -61,4 +64,9 @@ func (v Value) Blob() []byte {
 	ptr := unsafe.Pointer(C._sqlite3_value_blob(v.ptr))
 	n := v.Len()
 	return C.GoBytes(ptr, C.int(n))
+}
+
+func (v Value) Pointer() interface{} {
+	var ptr = C._sqlite3_value_pointer(v.ptr, pointerType)
+	return pointer.Restore(ptr)
 }

@@ -15,6 +15,7 @@ import "C"
 
 import (
 	"bytes"
+	"github.com/mattn/go-pointer"
 	"reflect"
 	"runtime"
 	"unsafe"
@@ -299,6 +300,18 @@ func (stmt *Stmt) BindValue(param int, value Value) {
 	stmt.handleBindErr(res)
 }
 
+// BindPointer binds any arbitrary Go value with the parameter.
+// The value can later be retrieved by custom functions or callbacks, casted back into a Go type,
+// and used in golang's environment.
+func (stmt *Stmt) BindPointer(param int, arg interface{}) {
+	if stmt.stmt == nil {
+		return
+	}
+	ptr := pointer.Save(arg)
+	res := C._sqlite3_bind_pointer(stmt.stmt, C.int(param), ptr, pointerType, (*[0]byte)(C.pointer_destructor_hook_tramp))
+	stmt.handleBindErr(res)
+}
+
 // SetInt64 binds an int64 to a parameter using a column name.
 func (stmt *Stmt) SetInt64(param string, value int64) {
 	stmt.BindInt64(stmt.findBindName(param), value)
@@ -343,6 +356,11 @@ func (stmt *Stmt) SetZeroBlob(param string, len int64) {
 // An invalid parameter name will cause the call to Step to return an error.
 func (stmt *Stmt) SetValue(param string, value Value) {
 	stmt.BindValue(stmt.findBindName(param), value)
+}
+
+// SetPointer binds a golang value to a parameter using a column name.
+func (stmt *Stmt) SetPointer(param string, arg interface{}) {
+	stmt.BindPointer(stmt.findBindName(param), arg)
 }
 
 // ColumnInt returns a query result value as an int.

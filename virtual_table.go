@@ -285,7 +285,7 @@ type IndexInfoInput struct {
 	OrderBy     []*OrderBy
 
 	//  available only in SQLite 3.10.0 and later
-	ColUsed int64 // Mask of columns used by statement
+	ColUsed *int64 // Mask of columns used by statement
 }
 
 // ConstraintUsage provides details about whether a constraint provided in IndexInfoInput
@@ -497,7 +497,8 @@ func x_best_index_tramp(tab *C.sqlite3_vtab, indexInfo *C.sqlite3_index_info) C.
 
 	var input = &IndexInfoInput{Constraints: constraints, OrderBy: orderBys}
 	if version >= 3010000 {
-		input.ColUsed = int64(indexInfo.colUsed)
+		i := int64(indexInfo.colUsed)
+		input.ColUsed = &i
 	}
 
 	output, err := table.BestIndex(input)
@@ -777,7 +778,7 @@ func set_error_message(vtab *C.sqlite3_vtab, err error) C.int {
 
 // helper to allocate a string for error using sqlite3_malloc
 func _allocate_string(msg string) *C.char {
-	var l = len(msg)+1
+	var l = len(msg) + 1
 	var dst = C._sqlite3_malloc(C.int(l))
 
 	// buf is go representation of dst, so that we can do copy(buf, ...)

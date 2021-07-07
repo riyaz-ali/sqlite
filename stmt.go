@@ -6,6 +6,9 @@ package sqlite
 // #include "unlock_notify.h"
 // #include "bridge/bridge.h"
 //
+// // destructor function defined in ./context.go
+// extern void pointer_destructor_hook_tramp(void*);
+//
 // // Use a helper function here to avoid the cgo pointer detection
 // // logic treating SQLITE_TRANSIENT as a Go pointer.
 // static int transient_bind_blob(sqlite3_stmt* stmt, int col, unsigned char* p, int n) {

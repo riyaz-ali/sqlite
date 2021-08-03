@@ -72,7 +72,7 @@ func (stmt *Stmt) Reset() error {
 		}
 		// An SQLITE_LOCKED_SHAREDCACHE error has been seen from sqlite3_reset
 		// in the wild, but so far has eluded exact test case replication.
-		var err = ErrorCode(C.wait_for_unlock_notify(stmt.conn.db, stmt.conn.unlockNote))
+		var err = ErrorCode(C._wait_for_unlock_notify(stmt.conn.db, stmt.conn.unlockNote))
 		if !err.ok() {
 			return err
 		}
@@ -141,7 +141,7 @@ func (stmt *Stmt) step() (bool, error) {
 				return false, ErrorCode(res)
 			}
 
-			if res = C.wait_for_unlock_notify(stmt.conn.db, stmt.conn.unlockNote); res != C.SQLITE_OK {
+			if res = C._wait_for_unlock_notify(stmt.conn.db, stmt.conn.unlockNote); res != C.SQLITE_OK {
 				return false, ErrorCode(res)
 			}
 			C._sqlite3_reset(stmt.stmt)

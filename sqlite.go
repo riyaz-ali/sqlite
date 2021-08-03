@@ -23,16 +23,16 @@ import (
 // A Conn can only be used by goroutine at a time.
 type Conn struct {
 	db         *C.sqlite3     // reference to the underlying sqlite3 database handle
-	unlockNote *C.unlock_note // reference to the unlock_note struct used for unlock notification .. defined in blocking_step.h
+	unlockNote *C._unlock_note // reference to the unlock_note struct used for unlock notification .. defined in blocking_step.h
 }
 
 // wrap wraps the provided handle to sqlite3 database, yielding Conn
 func wrap(db *C.sqlite3) *Conn {
-	var c = &Conn{db: db, unlockNote: C.unlock_note_alloc()}
+	var c = &Conn{db: db, unlockNote: C._unlock_note_alloc()}
 
 	// ensure unlock_note is free'd when connection is no longer in use
 	runtime.SetFinalizer(c, func(c *Conn) {
-		C.free(unsafe.Pointer(c.unlockNote))
+		C._unlock_note_free(c.unlockNote)
 	})
 
 	return c

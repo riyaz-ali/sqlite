@@ -20,36 +20,36 @@
 
 SQLITE_EXTENSION_INIT3
 
-unlock_note* unlock_note_alloc() {
-	unlock_note* un = (unlock_note*)malloc(sizeof(unlock_note));
+_unlock_note* _unlock_note_alloc() {
+	_unlock_note* un = (_unlock_note*)malloc(sizeof(_unlock_note));
 	pthread_mutex_init(&un->mu, 0);
 	pthread_cond_init(&un->cond, 0);
 	return un;
 }
 
-void unlock_note_free(unlock_note* un) {
+void _unlock_note_free(_unlock_note* un) {
 	pthread_cond_destroy(&un->cond);
 	pthread_mutex_destroy(&un->mu);
 	free(un);
 }
 
-void unlock_note_fire(unlock_note* un) {
+void _unlock_note_fire(_unlock_note* un) {
 	pthread_mutex_lock(&un->mu);
 	un->fired = 1;
 	pthread_cond_signal(&un->cond);
 	pthread_mutex_unlock(&un->mu);
 }
 
-static void unlock_notify_cb(void **apArg, int nArg) {
+static void _unlock_notify_cb(void **apArg, int nArg) {
 	for(int i=0; i < nArg; i++) {
-		unlock_note_fire((unlock_note*)apArg[i]);
+		_unlock_note_fire((_unlock_note*)apArg[i]);
 	}
 }
 
-int wait_for_unlock_notify(sqlite3 *db, unlock_note* un) {
+int _wait_for_unlock_notify(sqlite3 *db, _unlock_note* un) {
 	un->fired = 0;
 
-	int res = sqlite3_unlock_notify(db, unlock_notify_cb, (void *)un);
+	int res = sqlite3_unlock_notify(db, _unlock_notify_cb, (void *)un);
 
 	if (res == SQLITE_OK) {
 		pthread_mutex_lock(&un->mu);

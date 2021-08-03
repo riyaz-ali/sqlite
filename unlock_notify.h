@@ -4,14 +4,14 @@
 #include "sqlite3.h"
 #include <pthread.h>
 
-typedef struct unlock_note {
+typedef struct {
 	int fired;
 	pthread_cond_t cond;
 	pthread_mutex_t mu;
-} unlock_note;
+} _unlock_note;
 
-unlock_note* unlock_note_alloc();
-void unlock_note_fire(unlock_note* un);
-void unlock_note_free(unlock_note* un);
+_unlock_note* _unlock_note_alloc();
+void _unlock_note_fire(_unlock_note* un);
+void _unlock_note_free(_unlock_note* un);
 
-int wait_for_unlock_notify(sqlite3 *db, unlock_note* un);
+int _wait_for_unlock_notify(sqlite3 *db, _unlock_note* un);

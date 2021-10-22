@@ -6,8 +6,9 @@ package sqlite
 import "C"
 
 import (
-	"github.com/mattn/go-pointer"
 	"unsafe"
+
+	"github.com/mattn/go-pointer"
 )
 
 // ColumnType are codes for each of the SQLite fundamental data types:
@@ -52,6 +53,7 @@ func (v Value) Int64() int64     { return int64(C._sqlite3_value_int64(v.ptr)) }
 func (v Value) Float() float64   { return float64(C._sqlite3_value_double(v.ptr)) }
 func (v Value) Len() int         { return int(C._sqlite3_value_bytes(v.ptr)) }
 func (v Value) Type() ColumnType { return ColumnType(C._sqlite3_value_type(v.ptr)) }
+func (v Value) SubType() int { return int(C._sqlite3_value_subtype(v.ptr)) }
 func (v Value) Changed() bool    { return int(C._sqlite3_value_nochange(v.ptr)) != 0 }
 
 func (v Value) Text() string {

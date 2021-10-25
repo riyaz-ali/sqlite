@@ -137,3 +137,53 @@ func TestSubtypeFunctions(t *testing.T) {
 		t.Fatalf("is_x(x('t)) should return true: got %d", shouldTrue)
 	}
 }
+
+type Blub struct{}
+
+func (m *Blub) Args() int           { return 0 }
+func (m *Blub) Deterministic() bool { return true }
+func (m *Blub) Apply(ctx *Context, values ...Value) {
+	ctx.ResultBlob([]byte("blubber"))
+}
+
+func TestResultBlob(t *testing.T) {
+	var err error
+
+	Register(func(api *ExtensionApi) (ErrorCode, error) {
+		if err := api.CreateFunction("blub", &Blub{}); err != nil {
+			return SQLITE_ERROR, err
+		}
+		return SQLITE_OK, nil
+	})
+
+	var db *sql.DB
+	if db, err = Connect(Memory); err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+
+	var stmt *sql.Stmt
+	if stmt, err = db.Prepare("SELECT typeof(blub())"); err != nil {
+		t.Fatal(err)
+	}
+	defer stmt.Close()
+
+	var rows *sql.Rows
+	if rows, err = stmt.Query(); err != nil {
+		t.Fatal(err)
+	}
+	defer rows.Close()
+
+	if !rows.Next() {
+		t.Fatal("expected query to return single row")
+	}
+
+	var result string
+	if err = rows.Scan(&result); err != nil {
+		t.Fatal(err)
+	}
+
+	if result != "blob" {
+		t.Fatalf("typeof blub should be 'blob': got %q", result)
+	}
+}

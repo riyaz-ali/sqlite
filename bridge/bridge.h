@@ -37,6 +37,7 @@ void _sqlite3_result_value(sqlite3_context *, sqlite3_value *);
 void _sqlite3_result_pointer(sqlite3_context *, void *, const char *, void (*)(void *));
 void _sqlite3_result_zeroblob(sqlite3_context *, int);
 int _sqlite3_result_zeroblob64(sqlite3_context *, sqlite3_uint64);
+void _sqlite3_result_subtype(sqlite3_context *ctx, unsigned int v);
 
 // routines that work with sqlite_stmt; see: https://sqlite.org/c3ref/stmt.html
 //-----------------------------
@@ -100,6 +101,7 @@ sqlite_int64 _sqlite3_value_int64(sqlite3_value *);
 const unsigned char* _sqlite3_value_text(sqlite3_value *);
 int _sqlite3_value_bytes(sqlite3_value *);
 int _sqlite3_value_type(sqlite3_value *);
+unsigned int _sqlite3_value_subtype(sqlite3_value *val);
 int _sqlite3_value_numeric_type(sqlite3_value *);
 void* _sqlite3_value_pointer(sqlite3_value *, const char *);
 int _sqlite3_value_nochange(sqlite3_value*);

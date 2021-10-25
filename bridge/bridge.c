@@ -26,6 +26,7 @@ void _sqlite3_result_value(sqlite3_context *ctx, sqlite3_value *val){ sqlite3_re
 void _sqlite3_result_pointer(sqlite3_context *ctx, void *val, const char *name, void (*destructor)(void *)){ sqlite3_result_pointer(ctx, val, name, destructor); }
 void _sqlite3_result_zeroblob(sqlite3_context *ctx, int sz){ return sqlite3_result_zeroblob(ctx, sz); }
 int  _sqlite3_result_zeroblob64(sqlite3_context *ctx, sqlite3_uint64 sz){ return sqlite3_result_zeroblob64(ctx, sz); }
+void _sqlite3_result_subtype(sqlite3_context *ctx, unsigned int v){return sqlite3_result_subtype(ctx, v);}
 
 // routines that work with sqlite_stmt; see: https://sqlite.org/c3ref/stmt.html
 //-----------------------------
@@ -87,6 +88,7 @@ sqlite_int64 _sqlite3_value_int64(sqlite3_value *val){ return sqlite3_value_int6
 const unsigned char* _sqlite3_value_text(sqlite3_value *val){ return sqlite3_value_text(val); }
 int _sqlite3_value_bytes(sqlite3_value *val){ return sqlite3_value_bytes(val); }
 int _sqlite3_value_type(sqlite3_value *val){ return sqlite3_value_type(val); }
+unsigned int _sqlite3_value_subtype(sqlite3_value *val){ return sqlite3_value_subtype(val); }
 int _sqlite3_value_numeric_type(sqlite3_value *val){ return sqlite3_value_numeric_type(val); }
 void* _sqlite3_value_pointer(sqlite3_value *val, const char *name){ return sqlite3_value_pointer(val, name); }
 int _sqlite3_value_nochange(sqlite3_value *val){ return sqlite3_value_nochange(val); }

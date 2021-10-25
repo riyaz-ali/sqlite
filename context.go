@@ -8,8 +8,9 @@ package sqlite
 import "C"
 
 import (
-	"github.com/mattn/go-pointer"
 	"unsafe"
+
+	"github.com/mattn/go-pointer"
 )
 
 // see: https://sqlite.org/bindptr.html#pointer_types_are_static_strings
@@ -35,6 +36,10 @@ func (ctx Context) ResultText(v string) {
 		cv = C.CString(v)
 	}
 	C._sqlite3_result_text0(ctx.ptr, cv, C.int(len(v)), (*[0]byte)(C.free))
+}
+
+func (ctx Context) ResultSubType(v int) {
+	C._sqlite3_result_subtype(ctx.ptr, C.uint(v))
 }
 
 func (ctx Context) ResultError(err error) {

@@ -23,12 +23,18 @@ var pointerType = C.CString("golang")
 // adapted from https://github.com/crawshaw/sqlite/blob/ae45c9066f6e7b62bb7b491a0c7c9659f866ce7c/func.go
 type Context struct{ ptr *C.sqlite3_context }
 
-func (ctx Context) ResultInt(v int)        { C._sqlite3_result_int(ctx.ptr, C.int(v)) }
-func (ctx Context) ResultInt64(v int64)    { C._sqlite3_result_int64(ctx.ptr, C.sqlite3_int64(v)) }
-func (ctx Context) ResultFloat(v float64)  { C._sqlite3_result_double(ctx.ptr, C.double(v)) }
-func (ctx Context) ResultNull()            { C._sqlite3_result_null(ctx.ptr) }
-func (ctx Context) ResultValue(v Value)    { C._sqlite3_result_value(ctx.ptr, v.ptr) }
-func (ctx Context) ResultZeroBlob(n int64) { C._sqlite3_result_zeroblob64(ctx.ptr, C.sqlite3_uint64(n)) }
+func (ctx Context) ResultInt(v int)       { C._sqlite3_result_int(ctx.ptr, C.int(v)) }
+func (ctx Context) ResultInt64(v int64)   { C._sqlite3_result_int64(ctx.ptr, C.sqlite3_int64(v)) }
+func (ctx Context) ResultFloat(v float64) { C._sqlite3_result_double(ctx.ptr, C.double(v)) }
+func (ctx Context) ResultNull()           { C._sqlite3_result_null(ctx.ptr) }
+func (ctx Context) ResultValue(v Value)   { C._sqlite3_result_value(ctx.ptr, v.ptr) }
+func (ctx Context) ResultZeroBlob(n int64) {
+	C._sqlite3_result_zeroblob64(ctx.ptr, C.sqlite3_uint64(n))
+}
+
+func (ctx Context) ResultBlob(v []byte) {
+	C._sqlite3_result_blob0(ctx.ptr, C.CBytes(v), C.int(len(v)), (*[0]byte)(C.free))
+}
 
 func (ctx Context) ResultText(v string) {
 	var cv *C.char

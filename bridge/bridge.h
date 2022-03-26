@@ -139,6 +139,7 @@ int _sqlite3_libversion_number(void);
 // Virtual table routines
 int _sqlite3_create_module_v2(sqlite3 *, const char *, const sqlite3_module *, void *, void (*)(void *));
 int _sqlite3_declare_vtab(sqlite3 *, const char *);
+const char* _sqlite3_vtab_collation(sqlite3_index_info*, int);
 
 // miscellaneous routines
 int _sqlite3_get_autocommit(sqlite3 *);

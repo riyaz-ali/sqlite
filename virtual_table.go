@@ -286,6 +286,16 @@ type IndexInfoInput struct {
 
 	//  available only in SQLite 3.10.0 and later
 	ColUsed *int64 // Mask of columns used by statement
+
+	// --- internal state ---
+	input *C.sqlite3_index_info // pointer to the underlying sqlite3_index_info struct
+}
+
+// Collation returns a string that is the name of the appropriate collation sequence to use for text comparisons
+// on the constraint identified by pos.
+func (in *IndexInfoInput) Collation(pos int) string {
+	var name = C._sqlite3_vtab_collation(in.input, C.int(pos))
+	return C.GoString(name)
 }
 
 // ConstraintUsage provides details about whether a constraint provided in IndexInfoInput
@@ -512,7 +522,7 @@ func x_best_index_tramp(tab *C.sqlite3_vtab, indexInfo *C.sqlite3_index_info) C.
 		}
 	}
 
-	var input = &IndexInfoInput{Constraints: constraints, OrderBy: orderBys}
+	var input = &IndexInfoInput{Constraints: constraints, OrderBy: orderBys, input: indexInfo}
 	if version >= 3010000 {
 		i := int64(indexInfo.colUsed)
 		input.ColUsed = &i

@@ -412,13 +412,30 @@ func (ext *ExtensionApi) CreateModule(name string, module Module, opts ...func(*
 
 // options for CreateModule ...
 
-// @formatter:off
-func EponymousOnly(b bool) func(*ModuleOptions)  { return func(m *ModuleOptions) { m.EponymousOnly = b } }
-func ReadOnly(b bool) func(*ModuleOptions)       { return func(m *ModuleOptions) { m.ReadOnly = b } }
-func Transaction(b bool) func(*ModuleOptions)    { return func(m *ModuleOptions) { m.Transactional = b } }
-func TwoPhaseCommit(b bool) func(*ModuleOptions) { return func(m *ModuleOptions) { m.TwoPhaseCommit = b } }
-func Overloadable(b bool) func(*ModuleOptions)   { return func(m *ModuleOptions) { m.Overloadable = b } }
-// @formatter:on
+// EponymousOnly marks the module to be an eponymous-only module, prohibiting any "create virtual table" commands.
+func EponymousOnly(b bool) func(*ModuleOptions) {
+	return func(m *ModuleOptions) { m.EponymousOnly = b }
+}
+
+// ReadOnly marks the module as being read-only, i.e. insert / update / delete commands are not supported.
+func ReadOnly(b bool) func(*ModuleOptions) {
+	return func(m *ModuleOptions) { m.ReadOnly = b }
+}
+
+// Transaction marks the module as supporting transactions. The module then also needs to implement Transactional interface.
+func Transaction(b bool) func(*ModuleOptions) {
+	return func(m *ModuleOptions) { m.Transactional = b }
+}
+
+// TwoPhaseCommit marks the module as supporting two-phased commits.
+func TwoPhaseCommit(b bool) func(*ModuleOptions) {
+	return func(m *ModuleOptions) { m.TwoPhaseCommit = b }
+}
+
+// Overloadable marks the module as supporting function overloading. The module then also needs to implement Overloadable interface.
+func Overloadable(b bool) func(*ModuleOptions) {
+	return func(m *ModuleOptions) { m.Overloadable = b }
+}
 
 // TRAMPOLINES AHEAD!!
 

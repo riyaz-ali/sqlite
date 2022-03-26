@@ -45,11 +45,7 @@ SQLITE3
 - [x] [`commit` / `rollback` hooks](https://www.sqlite.org/c3ref/commit_hook.html)
 - [x] custom [`collation`](https://www.sqlite.org/c3ref/create_collation.html)
 - [x] custom [`scalar`, `aggregate` and `window` functions](https://www.sqlite.org/appfunc.html)
-- [x] custom [`virtual table`](https://www.sqlite.org/vtab.html) <sup>does not support `xFindFunction`, `xShadowName` and nested transations _yet_</sup>
-- [ ] custom [`authorizer` function](https://www.sqlite.org/c3ref/set_authorizer.html)
-- [ ] a simple [`sqlite3_exec`](https://www.sqlite.org/c3ref/exec.html) interface
-- [ ] support [`sqlite3` session api](https://www.sqlite.org/sessionintro.html)
-- [ ] support [`sqlite3` online backup api](https://www.sqlite.org/backup.html)
+- [x] custom [`virtual table`](https://www.sqlite.org/vtab.html) <sup>does not support `xShadowName` and nested transations _yet_</sup>
 
 Each of the support feature provides an exported interface that the user code must implement. Refer to code and [godoc](https://pkg.go.dev/go.riyazali.net/sqlite)
 for more details.

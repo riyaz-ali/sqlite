@@ -23,6 +23,10 @@ package sqlite
 // extern int x_commit_tramp(sqlite3_vtab*);
 // extern int x_rollback_tramp(sqlite3_vtab*);
 //
+// typedef void (*overloaded_function)(sqlite3_context*,int,sqlite3_value**);
+// extern int x_find_function_tramp(sqlite3_vtab*, int, char*, overloaded_function*, void**);
+// extern void x_overloaded_function_tramp(sqlite3_context*, int, sqlite3_value**);
+//
 // extern void module_destroy(void*);
 //
 // static sqlite3_module* _allocate_sqlite3_module() {
@@ -385,7 +389,7 @@ func (ext *ExtensionApi) CreateModule(name string, module Module, opts ...func(*
 	}
 
 	if opt.Overloadable {
-		// TODO: implement x_find_function_tramp
+		xFindFunction = (*[0]byte)(C.x_find_function_tramp)
 	}
 
 	xFilter = (*[0]byte)(C.x_filter_tramp)
@@ -417,6 +421,21 @@ func (ext *ExtensionApi) CreateModule(name string, module Module, opts ...func(*
 	sqliteModule.xFindFunction = xFindFunction
 
 	var res = C._sqlite3_create_module_v2(ext.db, cname, sqliteModule, pointer.Save(module), (*[0]byte)(C.module_destroy))
+	return errorIfNotOk(res)
+}
+
+// OverloadFunction registers a global version of a function with a particular name and number of parameters. If no such
+// function exists before, a new function is created. The implementation of the new function always causes an exception
+// to be thrown. So the new function is not good for anything by itself.
+//
+// The only purpose of a function registered this way is to be a placeholder function that can be overloaded by a virtual table;
+// as virtual tables can provide alternative implementations of functions using the xFindFunction(), but global versions of
+// those functions must exist in order to be overloaded.
+func (conn *Conn) OverloadFunction(name string, args int) error {
+	var cname = C.CString(name)
+	defer C.free(unsafe.Pointer(cname))
+
+	var res = C._sqlite3_overload_function(conn.db, cname, C.int(args))
 	return errorIfNotOk(res)
 }
 
@@ -788,6 +807,26 @@ func x_rollback_tramp(tab *C.sqlite3_vtab) C.int {
 		return set_error_message(tab, err)
 	}
 	return C.int(SQLITE_OK)
+}
+
+//export x_find_function_tramp
+func x_find_function_tramp(tab *C.sqlite3_vtab, nArg C.int, zName *C.char, pxFunc *C.overloaded_function, ppArg *unsafe.Pointer) C.int {
+	var table = pointer.Restore(((*C.go_virtual_table)(unsafe.Pointer(tab))).impl).(OverloadableVirtualTable)
+	var name, args = C.GoString(zName), int(nArg)
+	n, _func := table.FindFunction(name, args)
+	if _func == nil {
+		return C.int(0)
+	}
+	*pxFunc = (*[0]byte)(C.x_overloaded_function_tramp)
+	*ppArg = pointer.Save(_func)
+	return C.int(n)
+}
+
+//export x_overloaded_function_tramp
+func x_overloaded_function_tramp(ctx *C.sqlite3_context, n C.int, v **C.sqlite3_value) {
+	var p = unsafe.Pointer(C._sqlite3_user_data(ctx))
+	var fn = pointer.Restore(p).(func(*Context, ...Value))
+	fn(&Context{ptr: ctx}, toValues(n, v)...)
 }
 
 //export module_destroy

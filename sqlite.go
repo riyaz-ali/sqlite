@@ -22,7 +22,7 @@ import (
 //
 // A Conn can only be used by goroutine at a time.
 type Conn struct {
-	db         *C.sqlite3     // reference to the underlying sqlite3 database handle
+	db         *C.sqlite3      // reference to the underlying sqlite3 database handle
 	unlockNote *C._unlock_note // reference to the unlock_note struct used for unlock notification .. defined in blocking_step.h
 }
 
@@ -42,6 +42,11 @@ func wrap(db *C.sqlite3) *Conn {
 // see: https://www.sqlite.org/c3ref/last_insert_rowid.html
 func (conn *Conn) LastInsertRowID() int64 {
 	return int64(C._sqlite3_last_insert_rowid(conn.db))
+}
+
+// AutoCommit returns the status of the auto_commit setting
+func (conn *Conn) AutoCommit() bool {
+	return int(C._sqlite3_get_autocommit(conn.db)) != 0
 }
 
 // Prepare prepares a query and returns an Stmt.
@@ -84,7 +89,7 @@ func (conn *Conn) Prepare(query string) (*Stmt, int, error) {
 
 // Exec executes an SQLite query without caching the underlying query.
 // It is the spiritual equivalent of sqlite3_exec.
-func(conn *Conn) Exec(query string, fn func(stmt *Stmt) error, args ...interface{}) (err error) {
+func (conn *Conn) Exec(query string, fn func(stmt *Stmt) error, args ...interface{}) (err error) {
 	var stmt *Stmt
 	var trailingBytes int
 	if stmt, trailingBytes, err = conn.Prepare(query); err != nil {

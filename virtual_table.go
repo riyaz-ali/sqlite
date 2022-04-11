@@ -80,6 +80,18 @@ import (
 	"unsafe"
 )
 
+// VirtualTableContext is an extension of sqlite.Context that allows us to access some specialised interfaces only
+// available when dealing with virtual tables.
+type VirtualTableContext struct{ *Context }
+
+// NoChange returns true if the column is being fetched as part of an UPDATE operation
+// during which the column value will not change. The virtual table implementation can use this hint as
+// permission to substitute a return value that is less expensive to compute and that
+// the corresponding Update() method understands as a "no-change" value.
+func (ctx *VirtualTableContext) NoChange() bool {
+	return int(C._sqlite3_vtab_nochange(ctx.ptr)) == 1
+}
+
 // Module corresponds to an sqlite3_module and defines a module object used to implement a virtual table.
 // The Module API is adapted to feel more Go-like and so, overall, is split into various sub-types
 // all of which the implementer must provide in order to satisfy a sqlite_module interface.
@@ -230,7 +242,7 @@ type VirtualCursor interface {
 	// N is zero-based so the first column is numbered 0. Column may return its result back using the various ResultX
 	// methods defined on the Context argument. If the implementation calls none of those functions,
 	// then the value of the column defaults to an SQL NULL.
-	Column(*Context, int) error
+	Column(*VirtualTableContext, int) error
 
 	// Eof returns false if the specified cursor currently points to a valid row of data,
 	// or true otherwise. This method is called by the SQL engine immediately after each Filter and Next invocation.
@@ -735,7 +747,7 @@ func x_eof_tramp(cur *C.sqlite3_vtab_cursor) C.int {
 //export x_column_tramp
 func x_column_tramp(cur *C.sqlite3_vtab_cursor, c *C.sqlite3_context, idx C.int) C.int {
 	var cursor = pointer.Restore(((*C.go_virtual_cursor)(unsafe.Pointer(cur))).impl).(VirtualCursor)
-	var ctx = &Context{ptr: c}
+	var ctx = &VirtualTableContext{Context: &Context{ptr: c}}
 	if err := cursor.Column(ctx, int(idx)); err != nil {
 		if ec, ok := err.(ErrorCode); ok {
 			ctx.ResultText(ec.String())

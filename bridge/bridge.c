@@ -128,6 +128,7 @@ int _sqlite3_create_module_v2(sqlite3 *db, const char *name, const sqlite3_modul
 int _sqlite3_declare_vtab(sqlite3 *db, const char *sql) { return sqlite3_declare_vtab(db, sql); }
 const char* _sqlite3_vtab_collation(sqlite3_index_info* in, int i) { return sqlite3_vtab_collation(in, i); }
 int _sqlite3_overload_function(sqlite3 *db, const char *name, int args) { return sqlite3_overload_function(db, name, args); }
+int _sqlite3_vtab_nochange(sqlite3_context* ctx) { return sqlite3_vtab_nochange(ctx); }
 
 // miscellaneous routines
 int _sqlite3_get_autocommit(sqlite3 *db){ return sqlite3_get_autocommit(db); }

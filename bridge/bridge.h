@@ -141,6 +141,7 @@ int _sqlite3_create_module_v2(sqlite3 *, const char *, const sqlite3_module *, v
 int _sqlite3_declare_vtab(sqlite3 *, const char *);
 const char* _sqlite3_vtab_collation(sqlite3_index_info*, int);
 int _sqlite3_overload_function(sqlite3*, const char*, int);
+int _sqlite3_vtab_nochange(sqlite3_context*);
 
 // miscellaneous routines
 int _sqlite3_get_autocommit(sqlite3 *);

@@ -445,6 +445,10 @@ func (stmt *Stmt) ColumnTableName(col int) string {
 	return C.GoString((*C.char)(unsafe.Pointer(C._sqlite3_column_table_name(stmt.stmt, C.int(col)))))
 }
 
+func (stmt *Stmt) ColumnOriginName(col int) string {
+	return C.GoString((*C.char)(unsafe.Pointer(C._sqlite3_column_origin_name(stmt.stmt, C.int(col)))))
+}
+
 // ColumnIndex returns the index of the column with the given name.
 //
 // If there is no column with the given name ColumnIndex returns -1.

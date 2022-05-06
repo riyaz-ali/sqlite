@@ -31,7 +31,7 @@ func errorIfNotOk(res C.int) error {
 // are not errors so they should not be used in an Error.
 type ErrorCode int
 
-func (code ErrorCode) ok() bool  {
+func (code ErrorCode) ok() bool {
 	switch code {
 	case SQLITE_OK, SQLITE_ROW, SQLITE_DONE:
 		return true
@@ -354,4 +354,18 @@ func itoa(buf []byte, val int64) []byte {
 		buf[i] = '-'
 	}
 	return buf[i:]
+}
+
+type errorCodeWithMessage struct {
+	code ErrorCode
+	msg  string
+}
+
+// Error creates a new error with given error code and message
+func Error(code ErrorCode, msg string) error {
+	return &errorCodeWithMessage{code: code, msg: msg}
+}
+
+func (e *errorCodeWithMessage) Error() string {
+	return fmt.Sprintf("sqlite: %s: %s", e.code.String(), e.msg)
 }

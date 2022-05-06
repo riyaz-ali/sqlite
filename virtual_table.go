@@ -850,8 +850,13 @@ func set_error_message(vtab *C.sqlite3_vtab, err error) C.int {
 		C._sqlite3_free(unsafe.Pointer(vtab.zErrMsg))
 	}
 
-	vtab.zErrMsg = _allocate_string(err.Error())
-	return C.int(SQLITE_ERROR)
+	if em, ok := err.(*errorCodeWithMessage); ok {
+		vtab.zErrMsg = _allocate_string(em.msg)
+		return C.int(em.code)
+	} else {
+		vtab.zErrMsg = _allocate_string(err.Error())
+		return C.int(SQLITE_ERROR)
+	}
 }
 
 // helper to allocate a string for error using sqlite3_malloc

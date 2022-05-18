@@ -17,6 +17,7 @@ import "C"
 import (
 	"errors"
 	"github.com/mattn/go-pointer"
+	"reflect"
 	"sync"
 	"unsafe"
 )
@@ -125,7 +126,7 @@ func (ext *ExtensionApi) CreateCollation(name string, cmp func(string, string) i
 	var compare = (*[0]byte)(C.collation_function_compare_tramp)
 	var destroy = (*[0]byte)(C.function_destroy)
 
-	var res = C._sqlite3_create_collation_v2(ext.db, cname, C.SQLITE_UTF8, pApp, compare, destroy);
+	var res = C._sqlite3_create_collation_v2(ext.db, cname, C.SQLITE_UTF8, pApp, compare, destroy)
 	if err := ErrorCode(res); !err.ok() {
 		// release pApp as destroy isn't called automatically by sqlite3_create_collation_v2
 		pointer.Unref(pApp)
@@ -139,7 +140,8 @@ func toValues(count C.int, va **C.sqlite3_value) []Value {
 	var n = int(count)
 	var values []Value
 	if n > 0 {
-		values = (*[127]Value)(unsafe.Pointer(va))[:n:n]
+		values = *(*[]Value)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(unsafe.Pointer(va)), Len: n, Cap: n}))
+		values = values[:n:n]
 	}
 	return values
 }

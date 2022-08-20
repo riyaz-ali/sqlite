@@ -15,22 +15,37 @@ import (
 	"unsafe"
 )
 
+// ExtensionFunc represents a sqlite3 extension function,
+// invoked by sqlite3 core whenever the user registers the extension with the connection.
+type ExtensionFunc func(*ExtensionApi) (ErrorCode, error)
+
+// Extensions is a map of all registered extensions.
+// Access to this map is not synchronised, and is such not thread-safe.
+var extensions = make(map[string]ExtensionFunc)
+
+// RegisterNamed registers the provided extension function under the given name
+func RegisterNamed(name string, fn ExtensionFunc) { extensions[name] = fn }
+
+// Register registers the given fn under the default name.
+// This function is kept for backwards compatibility reason.
+func Register(fn ExtensionFunc) { RegisterNamed("default", fn) }
+
 //export go_sqlite3_extension_init
-func go_sqlite3_extension_init(db *C.struct_sqlite3, msg **C.char) (code ErrorCode) {
+func go_sqlite3_extension_init(name *C.char, db *C.struct_sqlite3, msg **C.char) (code ErrorCode) {
 	var err error
-	if code, err = extension(&ExtensionApi{db: db}); err != nil {
+	var extName = C.GoString(name)
+
+	fn, found := extensions[extName]
+	if !found {
+		*msg = _allocate_string("no extension with name '" + extName + "' registered")
+		return SQLITE_ERROR
+	}
+
+	if code, err = fn(&ExtensionApi{db: db}); err != nil {
 		*msg = _allocate_string(err.Error())
 	}
-	return
-}
 
-// registered singleton extension function
-var extension func(*ExtensionApi) (ErrorCode, error)
-
-// Register registers the given fn as the modules extension function.
-// The method is not thread-safe and must only be used once, ideally during init(..)
-func Register(fn func(*ExtensionApi) (ErrorCode, error)) {
-	extension = fn
+	return code
 }
 
 // ExtensionApi wraps the underlying sqlite_api_routines and allows Go code to hook into

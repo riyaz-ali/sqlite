@@ -150,7 +150,7 @@ func (cur *SeriesCursor) Next() error {
 	return nil
 }
 
-func (cur *SeriesCursor) Column(context *sqlite.Context, i int) error {
+func (cur *SeriesCursor) Column(context *sqlite.VirtualTableContext, i int) error {
 	var x int64
 	switch i {
 	case SERIES_COLUMN_START:

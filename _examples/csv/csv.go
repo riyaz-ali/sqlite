@@ -3,11 +3,12 @@ package main
 import (
 	"encoding/csv"
 	"fmt"
-	"go.riyazali.net/sqlite"
 	"io"
 	"os"
 	"strconv"
 	"strings"
+
+	"go.riyazali.net/sqlite"
 )
 
 // CsvModule provides an implementation of an sqlite virtual table for reading CSV files.
@@ -125,7 +126,7 @@ func (c *CsvCursor) Next() error {
 	return sqlite.SQLITE_OK
 }
 
-func (c *CsvCursor) Column(ctx *sqlite.Context, i int) error {
+func (c *CsvCursor) Column(ctx *sqlite.VirtualTableContext, i int) error {
 	if i >= 0 && i < len(c.current) && c.current[i] != "" {
 		ctx.ResultText(c.current[i])
 	}

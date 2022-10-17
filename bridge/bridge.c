@@ -19,7 +19,7 @@ void _sqlite3_result_error_code(sqlite3_context *ctx, int code){ sqlite3_result_
 void _sqlite3_result_error_nomem(sqlite3_context *ctx){ sqlite3_result_error_nomem(ctx); }
 void _sqlite3_result_error_toobig(sqlite3_context *ctx){ sqlite3_result_error_toobig(ctx); }
 void _sqlite3_result_int(sqlite3_context *ctx, int val){ sqlite3_result_int(ctx, val); }
-void _sqlite3_result_int64(sqlite3_context *ctx, sqlite_int64 val){ sqlite3_result_int(ctx, val); }
+void _sqlite3_result_int64(sqlite3_context *ctx, sqlite_int64 val){ sqlite3_result_int64(ctx, val); }
 void _sqlite3_result_null(sqlite3_context *ctx){ sqlite3_result_null(ctx); }
 void _sqlite3_result_text0(sqlite3_context *ctx, const char *val, int n, void (*destructor)(void *)){ sqlite3_result_text(ctx, val, n, destructor); }
 void _sqlite3_result_value(sqlite3_context *ctx, sqlite3_value *val){ sqlite3_result_value(ctx, val); }

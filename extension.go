@@ -48,6 +48,15 @@ func go_sqlite3_extension_init(name *C.char, db *C.struct_sqlite3, msg **C.char)
 	return code
 }
 
+// UnderlyingConnection represents a handle to an open sqlite3 database connection object.
+type UnderlyingConnection *C.struct_sqlite3
+
+// RegisterWith registers the given extension with the provided connection object.
+// The intended use-case is to provide support for statically linked extensions.
+func RegisterWith(conn UnderlyingConnection, fn ExtensionFunc) (ErrorCode, error) {
+	return fn(&ExtensionApi{db: (*C.struct_sqlite3)(conn)})
+}
+
 // ExtensionApi wraps the underlying sqlite_api_routines and allows Go code to hook into
 // sqlite's extension facility.
 type ExtensionApi struct {

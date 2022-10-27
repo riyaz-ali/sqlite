@@ -1,7 +1,7 @@
 // This file declares the wait_for_unlock_notify function.
 // See the documentation on Stmt.Step.
 
-#include "sqlite3.h"
+#include <sqlite3ext.h>
 #include <pthread.h>
 
 typedef struct {

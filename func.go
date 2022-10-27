@@ -1,8 +1,8 @@
 package sqlite
 
 // #include <stdlib.h>
-// #include "sqlite3.h"
-// #include "bridge/bridge.h"
+// #include <sqlite3ext.h>
+// #include "bridge.h"
 //
 // extern void scalar_function_apply_tramp(sqlite3_context*, int, sqlite3_value**);
 // extern void aggregate_function_step_tramp(sqlite3_context*, int, sqlite3_value**);

@@ -3,8 +3,8 @@ package sqlite
 // #cgo CFLAGS: -fPIC
 //
 // #include <stdlib.h>
-// #include "sqlite3.h"
-// #include "bridge/bridge.h"
+// #include <sqlite3ext.h>
+// #include "bridge.h"
 //
 // extern int  commit_hook_tramp(void*);
 // extern void rollback_hook_tramp(void*);

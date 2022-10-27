@@ -1,6 +1,6 @@
 // This file contains the SQLite3 extension entry-point routine
 // as defined here https://sqlite.org/loadext.html
-#include "sqlite3.h"
+#include <sqlite3ext.h>
 
 SQLITE_EXTENSION_INIT1
 

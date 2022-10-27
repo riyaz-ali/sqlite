@@ -3,9 +3,9 @@ package sqlite
 
 // #include <stdlib.h>
 // #include <string.h>
-// #include "sqlite3.h"
+// #include <sqlite3ext.h>
 // #include "unlock_notify.h"
-// #include "bridge/bridge.h"
+// #include "bridge.h"
 import "C"
 
 import (

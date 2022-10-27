@@ -1,8 +1,8 @@
 package sqlite
 
 // #include <stdlib.h>
-// #include "sqlite3.h"
-// #include "bridge/bridge.h"
+// #include <sqlite3ext.h>
+// #include "bridge.h"
 //
 // extern void pointer_destructor_hook_tramp(void*);
 import "C"

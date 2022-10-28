@@ -2,8 +2,8 @@ package sqlite
 
 // #include <stdlib.h>
 // #include <string.h>
-// #include "sqlite3.h"
-// #include "bridge/bridge.h"
+// #include <sqlite3ext.h>
+// #include "bridge.h"
 //
 // extern int x_create_tramp(sqlite3*, void*, int, char**, sqlite3_vtab**, char**);
 // extern int x_connect_tramp(sqlite3*, void*, int, char**, sqlite3_vtab**, char**);

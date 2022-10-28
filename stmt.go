@@ -2,9 +2,9 @@ package sqlite
 
 // #include <stdlib.h>
 // #include <string.h>
-// #include "sqlite3.h"
+// #include <sqlite3ext.h>
 // #include "unlock_notify.h"
-// #include "bridge/bridge.h"
+// #include "bridge.h"
 //
 // // destructor function defined in ./context.go
 // extern void pointer_destructor_hook_tramp(void*);

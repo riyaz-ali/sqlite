@@ -11,7 +11,7 @@
 // Most of the methods follow the convention of prefixing the sqlite api function with an underscore.
 // The bridge isn't extensive and doesn't cover the whole sqlite api.
 
-#include "../sqlite3.h"
+#include <sqlite3ext.h>
 
 //- routine that work with sqlite3_context; see: https://sqlite.org/c3ref/context.html
 //-----------------------------

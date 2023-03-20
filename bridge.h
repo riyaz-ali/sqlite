@@ -145,7 +145,6 @@ int _sqlite3_vtab_nochange(sqlite3_context*);
 
 // miscellaneous routines
 int _sqlite3_get_autocommit(sqlite3 *);
-int _sqlite3_enable_shared_cache(int);
 void _sqlite3_interrupt(sqlite3 *);
 int _sqlite3_release_memory(int);
 int _sqlite3_threadsafe(void);

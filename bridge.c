@@ -132,7 +132,6 @@ int _sqlite3_vtab_nochange(sqlite3_context* ctx) { return sqlite3_vtab_nochange(
 
 // miscellaneous routines
 int _sqlite3_get_autocommit(sqlite3 *db){ return sqlite3_get_autocommit(db); }
-int _sqlite3_enable_shared_cache(int enable){ return sqlite3_enable_shared_cache(enable); }
 void _sqlite3_interrupt(sqlite3 *db){ sqlite3_interrupt(db); }
 int _sqlite3_release_memory(int i){ return sqlite3_release_memory(i); }
 int _sqlite3_threadsafe(void){ return sqlite3_threadsafe(); }

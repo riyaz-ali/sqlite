@@ -136,12 +136,14 @@ func (ext *ExtensionApi) CreateCollation(name string, cmp func(string, string) i
 	return nil
 }
 
+// create []Value utilizing the underlying C array without any copy
+// see: https://stackoverflow.com/a/51188315/6611700
 func toValues(count C.int, va **C.sqlite3_value) []Value {
 	var n = int(count)
 	var values []Value
 	if n > 0 {
-		values = *(*[]Value)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(unsafe.Pointer(va)), Len: n, Cap: n}))
-		values = values[:n:n]
+		var sh = (*reflect.SliceHeader)(unsafe.Pointer(&values))
+		sh.Data, sh.Len, sh.Cap = uintptr(unsafe.Pointer(va)), n, n
 	}
 	return values
 }

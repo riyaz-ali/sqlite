@@ -493,7 +493,10 @@ func create_connect_shared(db *C.sqlite3, fn func(_ *Conn, args []string, declar
 
 	var args = make([]string, argc)
 	{ // convert **C.char into []string
-		var slice = *(*[]*C.char)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(unsafe.Pointer(argv)), Len: int(argc), Cap: int(argc)}))
+		var slice []*C.char
+		var sh = (*reflect.SliceHeader)(unsafe.Pointer(&slice))
+		sh.Data, sh.Len, sh.Cap = uintptr(unsafe.Pointer(argv)), int(argc), int(argc)
+
 		for i, s := range slice {
 			args[i] = C.GoString(s)
 		}
@@ -530,11 +533,10 @@ func x_best_index_tramp(tab *C.sqlite3_vtab, indexInfo *C.sqlite3_index_info) C.
 
 	var constraints []*IndexConstraint
 	{
-		var slice = *(*[]C.struct_sqlite3_index_constraint)(unsafe.Pointer(&reflect.SliceHeader{
-			Data: uintptr(unsafe.Pointer(indexInfo.aConstraint)),
-			Len:  int(indexInfo.nConstraint),
-			Cap:  int(indexInfo.nConstraint),
-		}))
+		var slice []C.struct_sqlite3_index_constraint
+		var sh = (*reflect.SliceHeader)(unsafe.Pointer(&slice))
+		sh.Data, sh.Len, sh.Cap = uintptr(unsafe.Pointer(indexInfo.aConstraint)), int(indexInfo.nConstraint), int(indexInfo.nConstraint)
+
 		for _, cons := range slice {
 			constraints = append(constraints,
 				&IndexConstraint{ColumnIndex: int(cons.iColumn), Op: ConstraintOp(cons.op), Usable: int(cons.usable) != 0})
@@ -543,11 +545,11 @@ func x_best_index_tramp(tab *C.sqlite3_vtab, indexInfo *C.sqlite3_index_info) C.
 
 	var orderBys []*OrderBy
 	{
-		var slice = *(*[]C.struct_sqlite3_index_orderby)(unsafe.Pointer(&reflect.SliceHeader{
-			Data: uintptr(unsafe.Pointer(indexInfo.aOrderBy)),
-			Len:  int(indexInfo.nOrderBy),
-			Cap:  int(indexInfo.nOrderBy),
-		}))
+		var slice []C.struct_sqlite3_index_orderby
+
+		var sh = (*reflect.SliceHeader)(unsafe.Pointer(&slice))
+		sh.Data, sh.Len, sh.Cap = uintptr(unsafe.Pointer(indexInfo.aOrderBy)), int(indexInfo.nOrderBy), int(indexInfo.nOrderBy)
+
 		for _, ob := range slice {
 			orderBys = append(orderBys, &OrderBy{ColumnIndex: int(ob.iColumn), Desc: int(ob.desc) == 1})
 		}
@@ -571,11 +573,9 @@ func x_best_index_tramp(tab *C.sqlite3_vtab, indexInfo *C.sqlite3_index_info) C.
 
 	// Get a pointer to constraint_usage struct so we can update in place.
 	// indexInfo.aConstraintUsage comes pre-allocated by SQLite core
-	var usage = *(*[]C.struct_sqlite3_index_constraint_usage)(unsafe.Pointer(&reflect.SliceHeader{
-		Data: uintptr(unsafe.Pointer(indexInfo.aConstraintUsage)),
-		Len:  int(indexInfo.nConstraint),
-		Cap:  int(indexInfo.nConstraint),
-	}))
+	var usage []C.struct_sqlite3_index_constraint_usage
+	var sh = (*reflect.SliceHeader)(unsafe.Pointer(&usage))
+	sh.Data, sh.Len, sh.Cap = uintptr(unsafe.Pointer(indexInfo.aConstraintUsage)), int(indexInfo.nConstraint), int(indexInfo.nConstraint)
 
 	for i, c := range output.ConstraintUsage {
 		if c != nil { // usage must be ordered .. and a list value might be nil so we better check this
@@ -865,7 +865,10 @@ func _allocate_string(msg string) *C.char {
 	var dst = C._sqlite3_malloc(C.int(l))
 
 	// buf is go representation of dst, so that we can do copy(buf, ...)
-	var buf = *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(unsafe.Pointer(dst)), Len: l, Cap: l}))
+	var buf []byte
+	var sh = (*reflect.SliceHeader)(unsafe.Pointer(&buf))
+	sh.Data, sh.Len, sh.Cap = uintptr(unsafe.Pointer(dst)), l, l
+
 	copy(buf, msg)
 	buf[l-1] = 0 // null-terminate the resulting string
 

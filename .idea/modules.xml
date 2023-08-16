@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/go-sqlite3-ext.iml" filepath="$PROJECT_DIR$/.idea/go-sqlite3-ext.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/sqlite.iml" filepath="$PROJECT_DIR$/.idea/sqlite.iml" />
     </modules>
   </component>
 </project>

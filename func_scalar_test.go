@@ -201,8 +201,17 @@ func (m *DBFileName) Apply(ctx *Context, values ...Value) {
 	}
 	defer stmt.Finalize()
 
-	name := stmt.ColumnName(0)
-	ctx.ResultText(name)
+	hasRow, err := stmt.Step()
+	if err != nil {
+		ctx.ResultText(err.Error())
+		return
+	}
+	if !hasRow {
+		ctx.ResultNull()
+		return
+	}
+
+	ctx.ResultText(stmt.ColumnText(0))
 }
 
 func TestDBFileName(t *testing.T) {
@@ -242,7 +251,7 @@ func TestDBFileName(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if result != "title" {
-		t.Fatalf("db_filename should return 'title': got %q", result)
+	if result != "hello" {
+		t.Fatalf("db_filename should return 'hello': got %q", result)
 	}
 }

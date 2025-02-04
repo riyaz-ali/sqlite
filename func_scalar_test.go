@@ -81,9 +81,9 @@ func (m *IsX) Args() int           { return 1 }
 func (m *IsX) Deterministic() bool { return true }
 func (m *IsX) Apply(ctx *Context, values ...Value) {
 	st := values[0].SubType()
-	if st == magic { 
+	if st == magic {
 		ctx.ResultInt(1)
-	}else {
+	} else {
 		ctx.ResultInt(0)
 	}
 }
@@ -185,5 +185,64 @@ func TestResultBlob(t *testing.T) {
 
 	if result != "blob" {
 		t.Fatalf("typeof blub should be 'blob': got %q", result)
+	}
+}
+
+type DBFileName struct{}
+
+func (m *DBFileName) Args() int           { return 0 }
+func (m *DBFileName) Deterministic() bool { return true }
+func (m *DBFileName) Apply(ctx *Context, values ...Value) {
+	conn := ctx.GetConnection()
+	stmt, _, err := conn.Prepare("SELECT 'hello' as title")
+	if err != nil {
+		ctx.ResultText(err.Error())
+		return
+	}
+	defer stmt.Finalize()
+
+	name := stmt.ColumnName(0)
+	ctx.ResultText(name)
+}
+
+func TestDBFileName(t *testing.T) {
+	var err error
+
+	Register(func(api *ExtensionApi) (ErrorCode, error) {
+		if err := api.CreateFunction("db_filename", &DBFileName{}); err != nil {
+			return SQLITE_ERROR, err
+		}
+		return SQLITE_OK, nil
+	})
+
+	var db *sql.DB
+	if db, err = Connect(Memory); err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+
+	var stmt *sql.Stmt
+	if stmt, err = db.Prepare("SELECT db_filename()"); err != nil {
+		t.Fatal(err)
+	}
+	defer stmt.Close()
+
+	var rows *sql.Rows
+	if rows, err = stmt.Query(); err != nil {
+		t.Fatal(err)
+	}
+	defer rows.Close()
+
+	if !rows.Next() {
+		t.Fatal("expected query to return single row")
+	}
+
+	var result string
+	if err = rows.Scan(&result); err != nil {
+		t.Fatal(err)
+	}
+
+	if result != "title" {
+		t.Fatalf("db_filename should return 'title': got %q", result)
 	}
 }

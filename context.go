@@ -23,6 +23,7 @@ var pointerType = C.CString("golang")
 // adapted from https://github.com/crawshaw/sqlite/blob/ae45c9066f6e7b62bb7b491a0c7c9659f866ce7c/func.go
 type Context struct{ ptr *C.sqlite3_context }
 
+func (ctx *Context) GetConnection() *Conn { return wrap(C._sqlite3_context_db_handle(ctx.ptr)) }
 func (ctx Context) ResultInt(v int)       { C._sqlite3_result_int(ctx.ptr, C.int(v)) }
 func (ctx Context) ResultInt64(v int64)   { C._sqlite3_result_int64(ctx.ptr, C.sqlite3_int64(v)) }
 func (ctx Context) ResultFloat(v float64) { C._sqlite3_result_double(ctx.ptr, C.double(v)) }

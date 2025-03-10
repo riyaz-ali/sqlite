@@ -406,8 +406,12 @@ func (stmt *Stmt) columnBytes(col int) []byte {
 		return nil
 	}
 	n := stmt.ColumnLen(col)
-	var slice = *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{Data: uintptr(unsafe.Pointer(p)), Len: n, Cap: n}))
-	return slice
+
+	var data []byte
+	var sh = (*reflect.SliceHeader)(unsafe.Pointer(&data))
+	sh.Data, sh.Len, sh.Cap = uintptr(unsafe.Pointer(p)), n, n
+
+	return data
 }
 
 // ColumnType returns the datatype code for the initial data
